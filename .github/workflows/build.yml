@@ -1,0 +1,33 @@
+name: build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  nix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix build --no-write-lock-file .#claude-account
+      # tests, package-smoke, package-settings, module-wiring, scripts-lint
+      - run: nix flake check --no-write-lock-file
+      # The script must stay usable without Nix: install.sh puts it behind a symlink,
+      # and the suite has to pass against the installed copy
+      - name: install.sh works
+        run: |
+          PREFIX=$PWD/out ./install.sh
+          test -L out/bin/claude-account
+          CLAUDE_ACCOUNT=$PWD/out/bin/claude-account ./tests/run.sh
+      - run: nix fmt -- --ci
+
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix run nixpkgs#shellcheck -- install.sh claude-account.sh tests/run.sh tests/stub/*
+      - run: nix run nixpkgs#shfmt -- -d -i 2 -ci install.sh claude-account.sh tests/run.sh tests/stub/*

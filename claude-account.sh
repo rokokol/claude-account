@@ -40,21 +40,33 @@ MCP via .mcp.json inside the project
 
 Paths resolve lazily, so a switch reaches sessions that are already running: their next token
 refresh lands in the newly active profile. use warns about a live claude but switches anyway
+
+Environment:
+  CLAUDE_ACCOUNT_DIR           the entry symlink (default: $HOME/.claude)
+  CLAUDE_ACCOUNT_PROFILES_DIR  where profiles live (default: $XDG_DATA_HOME/claude-profiles)
+  CLAUDE_ACCOUNT_SHARED_DIR    what they share (default: $XDG_DATA_HOME/claude-shared)
+  CLAUDE_ACCOUNT_SHARED        space-separated list of shared entries, replacing the default
 EOF
 }
 
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-CLAUDE_DIR="$HOME/.claude" # the entry symlink CLAUDE_CONFIG_DIR points at
-SHARED_DIR="$DATA_HOME/claude-shared"
-PROFILES_DIR="$DATA_HOME/claude-profiles"
+CLAUDE_DIR="${CLAUDE_ACCOUNT_DIR:-$HOME/.claude}" # the entry symlink CLAUDE_CONFIG_DIR points at
+SHARED_DIR="${CLAUDE_ACCOUNT_SHARED_DIR:-$DATA_HOME/claude-shared}"
+PROFILES_DIR="${CLAUDE_ACCOUNT_PROFILES_DIR:-$DATA_HOME/claude-profiles}"
 
-# What is shared across both accounts, all of it plain files carried by Syncthing
-# projects/, history.jsonl, plans/, todos/, tasks/, file-history/ are the shared work: one
-# job for two people — chats and memory, command history, plans, tasks and file-edit history
+# What every profile shares, all of it plain files a sync tool can carry between machines.
+# projects/, history.jsonl, plans/, todos/, tasks/, file-history/ are the shared work: one job
+# under whichever account is active — chats and memory, command history, plans, tasks and
+# file-edit history.
 SHARED_ENTRIES=(
   settings.json CLAUDE.md plugins skills commands agents
   projects history.jsonl plans todos tasks file-history
 )
+
+# A space-separated CLAUDE_ACCOUNT_SHARED replaces the list to share more, or less
+if [[ -n "${CLAUDE_ACCOUNT_SHARED:-}" ]]; then
+  read -ra SHARED_ENTRIES <<<"$CLAUDE_ACCOUNT_SHARED"
+fi
 
 die() {
   printf 'claude-account: %s\n' "$1" >&2
@@ -85,17 +97,34 @@ assert_migrated() {
     die "$CLAUDE_DIR is a real directory — migrate it first: claude-account init"
 }
 
+# Which shared entries are files and what an empty one has to contain — everything else in
+# SHARED_ENTRIES is a directory. Declared rather than guessed from the name, so adding an
+# entry says what it is instead of leaving it to an extension
+declare -A SHARED_FILES=(
+  # An empty settings.json must still be valid JSON, otherwise Claude Code fails to parse it
+  ["settings.json"]='{}'
+  ["CLAUDE.md"]=''
+  ["history.jsonl"]=''
+)
+
 # The shared dir must exist before anything symlinks into it
 ensure_shared() {
-  mkdir -p "$SHARED_DIR" \
-    "$SHARED_DIR/plugins" "$SHARED_DIR/skills" "$SHARED_DIR/commands" "$SHARED_DIR/agents" \
-    "$SHARED_DIR/projects" "$SHARED_DIR/plans" "$SHARED_DIR/todos" "$SHARED_DIR/tasks" \
-    "$SHARED_DIR/file-history"
+  local entry
 
-  # An empty settings.json must still be valid JSON, otherwise Claude Code fails to parse it
-  [[ -e "$SHARED_DIR/settings.json" ]] || printf '{}\n' >"$SHARED_DIR/settings.json"
-  [[ -e "$SHARED_DIR/CLAUDE.md" ]] || : >"$SHARED_DIR/CLAUDE.md"
-  [[ -e "$SHARED_DIR/history.jsonl" ]] || : >"$SHARED_DIR/history.jsonl"
+  mkdir -p "$SHARED_DIR"
+
+  for entry in "${SHARED_ENTRIES[@]}"; do
+    if [[ -v SHARED_FILES[$entry] ]]; then
+      if [[ ! -e "$SHARED_DIR/$entry" ]]; then
+        : >"$SHARED_DIR/$entry"
+        if [[ -n "${SHARED_FILES[$entry]}" ]]; then
+          printf '%s\n' "${SHARED_FILES[$entry]}" >"$SHARED_DIR/$entry"
+        fi
+      fi
+    else
+      mkdir -p "$SHARED_DIR/$entry"
+    fi
+  done
 }
 
 # Idempotent: profile dir + symlinks to the shared parts. Overwrites nothing — if a real
@@ -104,7 +133,7 @@ ensure_shared() {
 ensure_profile() {
   local name="$1"
   local dir="$PROFILES_DIR/$name"
-  local entry link
+  local entry link target
 
   ensure_shared
   mkdir -p "$dir"
@@ -117,14 +146,18 @@ ensure_profile() {
       continue
     fi
 
+    # Relative, so a sync tool carrying the symlink verbatim lands it valid on the other
+    # machine — an absolute /home/<someone-else> would dangle there
+    target=$(realpath -sm --relative-to="$dir" "$SHARED_DIR/$entry")
+
     if [[ -L "$link" ]]; then
       # Already our symlink — retarget just in case (broken/moved)
-      ln -sfn "../../claude-shared/$entry" "$link"
+      ln -sfn "$target" "$link"
     elif [[ -e "$link" ]]; then
       printf 'claude-account: %s — regular file, leaving it (expected a symlink to shared)\n' \
         "$link" >&2
     else
-      ln -s "../../claude-shared/$entry" "$link"
+      ln -s "$target" "$link"
     fi
   done
 }
@@ -234,7 +267,7 @@ cmd_path() {
 # absolute paths from the previous layout
 fix_legacy_paths() {
   local name="$1"
-  local old="$HOME/.claude"
+  local old="$CLAUDE_DIR"
   local f
 
   for f in "$SHARED_DIR/plugins/installed_plugins.json" \
@@ -277,8 +310,9 @@ cmd_init() {
 
   local name="${1:-$(uname -n)}"
   local email_arg="${2:-}"
-  local legacy_dir="$HOME/.claude"
-  local legacy_json="$HOME/.claude.json"
+  local legacy_dir="$CLAUDE_DIR"
+  # the binary keeps .claude.json beside the config dir, not inside it
+  local legacy_json="$CLAUDE_DIR.json"
 
   # Already the entry symlink — this host is migrated, nothing to pull in
   if [[ -L "$legacy_dir" ]]; then
@@ -289,7 +323,7 @@ cmd_init() {
 
   # The trigger is the ~/.claude directory. No dir — nothing to migrate
   if [[ ! -d "$legacy_dir" ]]; then
-    printf 'claude-account: no ~/.claude — nothing to migrate\n'
+    printf 'claude-account: no %s — nothing to migrate\n' "$legacy_dir"
     return 0
   fi
 
@@ -357,43 +391,43 @@ cmd_init() {
 
   local email
   email=$(profile_email "$name")
-  printf 'profile %s created from ~/.claude (%s), active\n' \
-    "$name" "${email:-${email_arg:-not logged in}}"
+  printf 'profile %s created from %s (%s), active\n' \
+    "$name" "$legacy_dir" "${email:-${email_arg:-not logged in}}"
 }
 
 case "${1:-}" in
-list)
-  shift
-  cmd_list "$@"
-  ;;
-current)
-  shift
-  cmd_current "$@"
-  ;;
-use)
-  shift
-  cmd_use "$@"
-  ;;
-add)
-  shift
-  cmd_add "$@"
-  ;;
-init)
-  shift
-  cmd_init "$@"
-  ;;
-ensure)
-  shift
-  cmd_ensure "$@"
-  ;;
-path)
-  shift
-  cmd_path "$@"
-  ;;
-help | -h | --help | "")
-  usage
-  ;;
-*)
-  die "unknown command: $1 (see --help)"
-  ;;
+  list)
+    shift
+    cmd_list "$@"
+    ;;
+  current)
+    shift
+    cmd_current "$@"
+    ;;
+  use)
+    shift
+    cmd_use "$@"
+    ;;
+  add)
+    shift
+    cmd_add "$@"
+    ;;
+  init)
+    shift
+    cmd_init "$@"
+    ;;
+  ensure)
+    shift
+    cmd_ensure "$@"
+    ;;
+  path)
+    shift
+    cmd_path "$@"
+    ;;
+  help | -h | --help | "")
+    usage
+    ;;
+  *)
+    die "unknown command: $1 (see --help)"
+    ;;
 esac

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Stands in for the real pgrep, so the suite does not depend on whether a claude session
+# happens to be open on the machine running it — including the one running the suite
+set -euo pipefail
+
+[[ -n "${FAKE_CLAUDE_RUNNING:-}" ]] && exit 0
+exit 1
