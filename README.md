@@ -43,7 +43,7 @@ So the **stock `claude` binary needs no wrapper**: it looks in `~/.claude` like 
 
 Paths resolve lazily, so a switch reaches sessions that are already open — their next token refresh lands in the newly active profile. `use` says so and switches anyway
 
-## What is per-account and what is not
+## What is per-account by default and what is not
 
 | stays in the profile | is shared |
 | --- | --- |
