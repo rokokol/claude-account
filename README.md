@@ -24,6 +24,19 @@ claude-account use work    # and the next `claude` is the work account
 
 Came over from my rice, **[rokokol/huix](https://github.com/rokokol/huix)**
 
+## Contents
+
+- [How it switches](#how-it-switches)
+- [What is per-account by default and what is not](#what-is-per-account-by-default-and-what-is-not)
+- [Commands](#commands)
+- [Install](#install)
+  - [Home Manager](#home-manager)
+  - [Why CLAUDE_CONFIG_DIR has to be pinned](#why-claude_config_dir-has-to-be-pinned)
+  - [Any other distribution](#any-other-distribution)
+- [Tests](#tests)
+- [Layout](#layout)
+- [License](#license)
+
 ## How it switches
 
 `~/.claude` is a **symlink** to the active profile. That is the entire mechanism:
