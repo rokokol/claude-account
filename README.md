@@ -10,8 +10,6 @@
 [![license](https://img.shields.io/badge/MIT-3DA639?style=flat)](LICENSE)
 [![build](https://github.com/rokokol/claude-account/actions/workflows/build.yml/badge.svg)](https://github.com/rokokol/claude-account/actions/workflows/build.yml)
 
-[Русский](README.ru.md)
-
 </div>
 
 As many accounts on one user as you need — work, personal, a client's — and switching between them is one command. What you do **not** get is a second copy of everything else: the skills, plugins, commands, agents, settings and, above all, the chats, the memory, the plans and the shell history stay **one set that every account uses**
