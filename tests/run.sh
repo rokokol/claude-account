@@ -19,6 +19,20 @@ trap 'rm -rf "$WORK"' EXIT
 # than something it inherits from the machine
 export PATH="$HERE/stub:$PATH"
 
+# A stub that is not executable, or one the PATH does not reach first, silently hands the
+# suite the real tool — and for pgrep that is the developer's own running claude
+for stub in "$HERE"/stub/*; do
+  tool=$(basename "$stub")
+  if [[ ! -x $stub ]]; then
+    printf 'tests/stub/%s is not executable\n' "$tool" >&2
+    exit 1
+  fi
+  if [[ "$(command -v "$tool")" != "$stub" ]]; then
+    printf '%s resolves to %s, not to the stub\n' "$tool" "$(command -v "$tool")" >&2
+    exit 1
+  fi
+done
+
 fails=0
 case_name=""
 
