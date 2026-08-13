@@ -102,7 +102,7 @@ A hand-written global `CLAUDE.md` is **never** auto-promoted to shared: it is pa
 
 That installs the switcher, pins `CLAUDE_CONFIG_DIR` and repairs the active profile's links on every activation. Install Claude Code itself however you already do — this module deliberately does not, so it never fights your pin
 
-| option | | default |
+| option | what it does | default |
 | --- | --- | --- |
 | `sharedEntries` | what every profile shares | the table above |
 | `sharedDir` / `profilesDir` | where shared data and profiles live | under `$XDG_DATA_HOME` |
