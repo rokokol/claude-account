@@ -14,6 +14,9 @@
 
 As many accounts on one user as you need — work, personal, a client's — and switching between them is one command. What you do **not** get is a second copy of everything else: the skills, plugins, commands, agents, settings and, above all, the chats, the memory, the plans and the shell history stay **one set that every account uses**
 
+> [!tip]
+> It also allows storing all essential data in a single directory (`claude-shared`) and sharing it via tools like Syncthing
+
 That is the whole design. Logging in as someone else changes who pays for the tokens, not who you are on this machine
 
 ```sh
