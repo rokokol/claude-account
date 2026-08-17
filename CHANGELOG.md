@@ -14,6 +14,7 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 ### Changed
 
 - `ensure` shares the default `$XDG_CONFIG_HOME/opencode` directory without requiring an explicit setting
+- `install.sh` accepts `DESTDIR` independently of `PREFIX`, so package recipes can stage its canonical layout
 
 ## [1.0.0] - 2026-08-13
 

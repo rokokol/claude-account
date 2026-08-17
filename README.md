@@ -140,6 +140,8 @@ sudo ./install.sh          # PREFIX=~/.local ./install.sh for a user install
 
 Needs `bash` 4+ (associative arrays), `jq`, `pgrep`, and coreutils. Then export `CLAUDE_CONFIG_DIR="$HOME/.claude"` from your shell profile, for the reason above
 
+Package recipes can stage the same layout without duplicating it: `DESTDIR="$pkgdir" PREFIX=/usr ./install.sh`
+
 To share existing OpenCode settings and plugins, close OpenCode and run:
 
 ```sh
