@@ -17,6 +17,7 @@
   profilesDir ? null,
   sharedDir ? null,
   sharedEntries ? null,
+  opencodeConfigDir ? null,
 }:
 
 let
@@ -58,9 +59,12 @@ stdenvNoCC.mkDerivation {
       ${setDefault "CLAUDE_ACCOUNT_DIR" claudeDir} \
       ${setDefault "CLAUDE_ACCOUNT_PROFILES_DIR" profilesDir} \
       ${setDefault "CLAUDE_ACCOUNT_SHARED_DIR" sharedDir} \
-      ${setDefault "CLAUDE_ACCOUNT_SHARED" (
-        if sharedEntries == null then null else lib.concatStringsSep " " sharedEntries
-      )}
+      ${
+        setDefault "CLAUDE_ACCOUNT_SHARED" (
+          if sharedEntries == null then null else lib.concatStringsSep " " sharedEntries
+        )
+      } \
+      ${setDefault "CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR" opencodeConfigDir}
 
     runHook postInstall
   '';

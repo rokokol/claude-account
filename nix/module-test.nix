@@ -30,6 +30,10 @@ let
           type = lib.types.attrsOf lib.types.anything;
           default = { };
         };
+        xdg.configHome = lib.mkOption {
+          type = lib.types.str;
+          default = "$HOME/.config";
+        };
       };
     };
 
@@ -68,6 +72,13 @@ let
     };
   };
 
+  withOpenCode = eval {
+    programs.claude-account = {
+      enable = true;
+      opencode.enable = true;
+    };
+  };
+
   off = eval { programs.claude-account.enable = false; };
 in
 {
@@ -86,4 +97,7 @@ in
   offPackages = off.home.packages;
   offActivation = off.home.activation;
   offSessionVariables = off.home.sessionVariables;
+
+  opencodePackages = lib.concatMapStringsSep " " toString withOpenCode.home.packages;
+  opencodePackage = toString withOpenCode.programs.claude-account.package;
 }

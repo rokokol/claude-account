@@ -26,6 +26,7 @@ in
           sharedDir
           sharedEntries
           ;
+        opencodeConfigDir = if cfg.opencode.enable then cfg.opencode.configDir else null;
       };
       defaultText = lib.literalExpression "claude-account carrying the settings below";
       description = "The package to install; it carries its own settings";
@@ -74,6 +75,16 @@ in
       '';
     };
 
+    opencode = {
+      enable = lib.mkEnableOption "sharing mutable OpenCode settings and plugins";
+
+      configDir = lib.mkOption {
+        type = lib.types.str;
+        default = "${config.xdg.configHome}/opencode";
+        description = "The mutable OpenCode configuration directory to share";
+      };
+    };
+
     pinConfigDir = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -99,7 +110,7 @@ in
 
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
-      { home.packages = [ cfg.package ]; }
+      { home.packages = [ cfg.package ] ++ lib.optional cfg.opencode.enable pkgs.opencode; }
 
       (lib.mkIf cfg.pinConfigDir {
         home.sessionVariables.CLAUDE_CONFIG_DIR =

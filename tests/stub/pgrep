@@ -3,5 +3,9 @@
 # happens to be open on the machine running it — including the one running the suite
 set -euo pipefail
 
-[[ -n "${FAKE_CLAUDE_RUNNING:-}" ]] && exit 0
+if [[ "$*" == *opencode* ]]; then
+  [[ -n "${FAKE_OPENCODE_RUNNING:-}" ]] && exit 0
+else
+  [[ -n "${FAKE_CLAUDE_RUNNING:-}" ]] && exit 0
+fi
 exit 1

@@ -187,6 +187,8 @@
                 want '.offPackages == []' "the switcher is installed while disabled"
                 want '.offActivation == {}' "the repair survives enable = false"
                 want '.offSessionVariables == {}' "the pin survives enable = false"
+                want '.opencodePackages | test("opencode")' "OpenCode is not installed when enabled"
+                want '.opencodePackage | test("claude-account")' "OpenCode settings did not reach the switcher"
                 touch $out
               '';
 

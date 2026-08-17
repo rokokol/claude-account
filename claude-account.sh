@@ -18,6 +18,9 @@ Usage:
                                from a clean terminal with no claude sessions open
   claude-account ensure        repair the active profile's symlinks (home-manager calls this)
   claude-account path          path of the active profile
+  claude-account opencode init move OpenCode config into the shared directory
+  claude-account opencode status
+                               show whether OpenCode config is shared
   claude-account --help        this help
 
 ~/.claude is a symlink to the active profile, so the stock claude binary needs no wrapper and
@@ -46,13 +49,17 @@ Environment:
   CLAUDE_ACCOUNT_PROFILES_DIR  where profiles live (default: $XDG_DATA_HOME/claude-profiles)
   CLAUDE_ACCOUNT_SHARED_DIR    what they share (default: $XDG_DATA_HOME/claude-shared)
   CLAUDE_ACCOUNT_SHARED        space-separated list of shared entries, replacing the default
+  CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR
+                               OpenCode config directory Home Manager keeps shared
 EOF
 }
 
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 CLAUDE_DIR="${CLAUDE_ACCOUNT_DIR:-$HOME/.claude}" # the entry symlink CLAUDE_CONFIG_DIR points at
 SHARED_DIR="${CLAUDE_ACCOUNT_SHARED_DIR:-$DATA_HOME/claude-shared}"
 PROFILES_DIR="${CLAUDE_ACCOUNT_PROFILES_DIR:-$DATA_HOME/claude-profiles}"
+OPENCODE_CONFIG_DIR="${CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR:-}"
 
 # What every profile shares, all of it plain files a sync tool can carry between machines.
 # projects/, history.jsonl, plans/, todos/, tasks/, file-history/ are the shared work: one job
@@ -81,6 +88,10 @@ valid_name() {
 # A claude-code session shows up with comm "claude" or, when nixpkgs-wrapped, ".claude-wrapped"
 claude_running() {
   pgrep -x claude >/dev/null 2>&1 || pgrep -x .claude-wrapped >/dev/null 2>&1
+}
+
+opencode_running() {
+  pgrep -x opencode >/dev/null 2>&1 || pgrep -x .opencode-wrapped >/dev/null 2>&1
 }
 
 # The entry symlink is the state — nothing else to keep in sync with it. Empty means no profile
@@ -162,6 +173,38 @@ ensure_profile() {
   done
 }
 
+ensure_opencode_config() {
+  local config_dir="$1"
+  local shared_config="$SHARED_DIR/opencode"
+  local config_parent target actual
+
+  mkdir -p "$SHARED_DIR"
+  target=$(realpath -m "$shared_config")
+
+  if [[ -L "$config_dir" ]]; then
+    actual=$(realpath -m "$config_dir")
+    [[ "$actual" == "$target" ]] ||
+      die "$config_dir points to $actual, not the shared OpenCode config"
+    mkdir -p "$shared_config"
+    return
+  fi
+
+  if [[ -e "$config_dir" ]]; then
+    [[ -d "$config_dir" ]] || die "$config_dir is not a directory"
+    [[ ! -e "$shared_config" ]] ||
+      die "$config_dir and $shared_config both exist — merge them by hand"
+    opencode_running && die "opencode is running — close it before migrating its config"
+    mv "$config_dir" "$shared_config"
+  else
+    mkdir -p "$shared_config"
+  fi
+
+  config_parent=$(dirname "$config_dir")
+  mkdir -p "$config_parent"
+  target=$(realpath -sm --relative-to="$config_parent" "$shared_config")
+  ln -s "$target" "$config_dir"
+}
+
 profile_email() {
   local cfg="$PROFILES_DIR/$1/.claude.json"
 
@@ -231,7 +274,11 @@ cmd_add() {
 cmd_ensure() {
   local name
 
-  if [[ ! -L "$CLAUDE_DIR" ]]; then
+  if [[ -L "$CLAUDE_DIR" ]]; then
+    name=$(active_profile)
+    valid_name "$name" || die "broken profile name behind $CLAUDE_DIR: $name"
+    ensure_profile "$name"
+  else
     if [[ -e "$CLAUDE_DIR" ]]; then
       printf 'claude-account: %s is a real directory — migrate it: claude-account init\n' \
         "$CLAUDE_DIR" >&2
@@ -239,12 +286,43 @@ cmd_ensure() {
       printf 'claude-account: no active profile yet — pick one: claude-account use <name>\n' >&2
     fi
 
-    return 0
   fi
 
-  name=$(active_profile)
-  valid_name "$name" || die "broken profile name behind $CLAUDE_DIR: $name"
-  ensure_profile "$name"
+  if [[ -n "$OPENCODE_CONFIG_DIR" ]]; then
+    ensure_opencode_config "$OPENCODE_CONFIG_DIR"
+  fi
+}
+
+cmd_opencode_init() {
+  ensure_opencode_config "${OPENCODE_CONFIG_DIR:-$CONFIG_HOME/opencode}"
+  printf 'OpenCode config is shared at %s/opencode\n' "$SHARED_DIR"
+}
+
+cmd_opencode_status() {
+  local config_dir="${OPENCODE_CONFIG_DIR:-$CONFIG_HOME/opencode}"
+  local shared_config="$SHARED_DIR/opencode"
+
+  if [[ -L "$config_dir" ]] && [[ "$(realpath -m "$config_dir")" == "$(realpath -m "$shared_config")" ]]; then
+    printf 'OpenCode config: shared (%s)\n' "$shared_config"
+  else
+    printf 'OpenCode config: local (%s)\n' "$config_dir"
+  fi
+}
+
+cmd_opencode() {
+  case "${1:-}" in
+    init)
+      shift
+      cmd_opencode_init "$@"
+      ;;
+    status)
+      shift
+      cmd_opencode_status "$@"
+      ;;
+    *)
+      die "usage: claude-account opencode init|status"
+      ;;
+  esac
 }
 
 cmd_current() {
@@ -423,6 +501,10 @@ case "${1:-}" in
   path)
     shift
     cmd_path "$@"
+    ;;
+  opencode)
+    shift
+    cmd_opencode "$@"
     ;;
   help | -h | --help | "")
     usage

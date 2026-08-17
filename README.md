@@ -54,6 +54,10 @@ So the **stock `claude` binary needs no wrapper**: it looks in `~/.claude` like 
 
 Paths resolve lazily, so a switch reaches sessions that are already open — their next token refresh lands in the newly active profile. `use` says so and switches anyway
 
+## OpenCode
+
+OpenCode can use the same writable shared directory for its settings and plugin declarations without coupling provider accounts to Claude profiles. Its config directory becomes a relative link to `claude-shared/opencode`; `~/.local/share/opencode/auth.json`, sessions and databases remain local. Plugin package caches stay in `~/.cache/opencode`, so another host installs the shared plugin list into its own cache instead of syncing `node_modules`
+
 ## What is per-account by default and what is not
 
 | stays in the profile | is shared |
@@ -79,6 +83,8 @@ claude-account current          # name of the active profile
 claude-account path             # its directory
 claude-account ensure           # relink the active profile (the module calls this)
 claude-account init [name]      # pull an existing ~/.claude into a profile
+claude-account opencode init    # move OpenCode config into claude-shared
+claude-account opencode status  # show whether OpenCode config is shared
 ```
 
 `init` is the one-time migration: it moves your real `~/.claude` into a profile, lifts the shared parts out into `claude-shared`, and points the symlink at it. It refuses to run from inside a Claude session or while one is open, because moving `~/.claude` out from under a live session breaks it — `--force` if you are sure
@@ -97,10 +103,11 @@ A hand-written global `CLAUDE.md` is **never** auto-promoted to shared: it is pa
   imports = [ inputs.claude-account.homeManagerModules.default ];
 
   programs.claude-account.enable = true;
+  programs.claude-account.opencode.enable = true;
 }
 ```
 
-That installs the switcher, pins `CLAUDE_CONFIG_DIR` and repairs the active profile's links on every activation. Install Claude Code itself however you already do — this module deliberately does not, so it never fights your pin
+That installs the switcher, pins `CLAUDE_CONFIG_DIR` and repairs the active profile's links on every activation. `opencode.enable` also installs OpenCode and keeps its mutable config shared. Install Claude Code itself however you already do — this module deliberately does not, so it never fights your pin
 
 | option | what it does | default |
 | --- | --- | --- |
@@ -109,6 +116,8 @@ That installs the switcher, pins `CLAUDE_CONFIG_DIR` and repairs the active prof
 | `claudeDir` | the entry symlink | `$HOME/.claude` |
 | `pinConfigDir` | export `CLAUDE_CONFIG_DIR` | `true` |
 | `repairOnActivation` | run `ensure` on every activation | `true` |
+| `opencode.enable` | install OpenCode and share its config | `false` |
+| `opencode.configDir` | mutable OpenCode config directory to share | `$XDG_CONFIG_HOME/opencode` |
 
 ### Why `CLAUDE_CONFIG_DIR` has to be pinned
 
@@ -129,6 +138,14 @@ sudo ./install.sh          # PREFIX=~/.local ./install.sh for a user install
 ```
 
 Needs `bash` 4+ (associative arrays), `jq`, `pgrep`, and coreutils. Then export `CLAUDE_CONFIG_DIR="$HOME/.claude"` from your shell profile, for the reason above
+
+To share existing OpenCode settings and plugins, close OpenCode and run:
+
+```sh
+claude-account opencode init
+```
+
+It moves `~/.config/opencode` to `~/.local/share/claude-shared/opencode` and leaves a relative symlink. Install OpenCode with your distribution's package manager; the non-Nix installer deliberately does not choose one for you
 
 ## Tests
 

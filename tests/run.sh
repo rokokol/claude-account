@@ -45,7 +45,7 @@ ok() {
   printf '  ✓ %s\n' "$case_name"
 }
 
-# A scratch world per case. HOME, XDG_DATA_HOME and the three overrides all point inside it,
+# A scratch world per case. HOME, XDG dirs and the three overrides all point inside it,
 # so nothing here can name a path outside $WORK
 world() {
   case_name="$1"
@@ -54,10 +54,11 @@ world() {
   mkdir -p "$HOME/.local/share"
   export HOME
   export XDG_DATA_HOME="$HOME/.local/share"
+  export XDG_CONFIG_HOME="$HOME/.config"
   export CLAUDE_ACCOUNT_DIR="$HOME/.claude"
   export CLAUDE_ACCOUNT_PROFILES_DIR="$XDG_DATA_HOME/claude-profiles"
   export CLAUDE_ACCOUNT_SHARED_DIR="$XDG_DATA_HOME/claude-shared"
-  unset CLAUDE_ACCOUNT_SHARED CLAUDECODE FAKE_CLAUDE_RUNNING
+  unset CLAUDE_ACCOUNT_SHARED CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR CLAUDECODE FAKE_CLAUDE_RUNNING FAKE_OPENCODE_RUNNING
 }
 
 ca() { "$CA" "$@"; }
@@ -199,6 +200,17 @@ else
   fail "ensure failed where home-manager activation calls it on a fresh machine"
 fi
 
+world ensure-shares-opencode-when-configured
+mkdir -p "$XDG_CONFIG_HOME/opencode"
+printf '{"plugin":[]}' >"$XDG_CONFIG_HOME/opencode/opencode.json"
+CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR="$XDG_CONFIG_HOME/opencode" ca ensure >/dev/null 2>&1
+if [[ -L "$XDG_CONFIG_HOME/opencode" &&
+  "$(cat "$CLAUDE_ACCOUNT_SHARED_DIR/opencode/opencode.json")" == '{"plugin":[]}' ]]; then
+  ok
+else
+  fail "ensure did not migrate the configured OpenCode directory"
+fi
+
 echo "init"
 
 # The shape a pre-profile machine has: a real ~/.claude with a token, shared work and a
@@ -292,10 +304,58 @@ else
   fail "switching with a session open should warn and still switch"
 fi
 
+echo "opencode"
+
+world opencode-init-moves-config-to-shared
+mkdir -p "$XDG_CONFIG_HOME/opencode"
+printf '{"plugin":[]}' >"$XDG_CONFIG_HOME/opencode/opencode.json"
+ca opencode init >/dev/null
+if [[ -L "$XDG_CONFIG_HOME/opencode" &&
+  "$(cat "$CLAUDE_ACCOUNT_SHARED_DIR/opencode/opencode.json")" == '{"plugin":[]}' ]]; then
+  ok
+else
+  fail "opencode init did not move config into shared"
+fi
+
+world opencode-init-is-idempotent
+mkdir -p "$XDG_CONFIG_HOME/opencode"
+ca opencode init >/dev/null
+if ca opencode init >/dev/null && [[ -L "$XDG_CONFIG_HOME/opencode" ]]; then
+  ok
+else
+  fail "a second opencode init did not preserve the shared link"
+fi
+
+world opencode-init-refuses-a-conflict
+mkdir -p "$XDG_CONFIG_HOME/opencode" "$CLAUDE_ACCOUNT_SHARED_DIR/opencode"
+if ca opencode init >/dev/null 2>&1; then
+  fail "opencode init overwrote two existing configuration directories"
+else
+  ok
+fi
+
+world opencode-init-refuses-a-live-session
+mkdir -p "$XDG_CONFIG_HOME/opencode"
+if FAKE_OPENCODE_RUNNING=1 ca opencode init >/dev/null 2>&1 || [[ -L "$XDG_CONFIG_HOME/opencode" ]]; then
+  fail "opencode init moved config out from under a live session"
+else
+  ok
+fi
+
+world opencode-status-reports-local-and-shared
+local_status=$(ca opencode status)
+ca opencode init >/dev/null
+shared_status=$(ca opencode status)
+if [[ "$local_status" == OpenCode\ config:\ local* && "$shared_status" == OpenCode\ config:\ shared* ]]; then
+  ok
+else
+  fail "opencode status did not distinguish local and shared config"
+fi
+
 echo "cli"
 
 world help-lists-the-commands
-if ca --help | grep -q 'claude-account use <name>'; then
+if ca --help | grep -q 'claude-account use <name>' && ca --help | grep -q 'claude-account opencode init'; then
   ok
 else
   fail "--help does not document the commands"
