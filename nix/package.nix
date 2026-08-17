@@ -41,7 +41,7 @@ in
 
 stdenvNoCC.mkDerivation {
   pname = "claude-account";
-  version = "1.0";
+  version = "1.1.0";
 
   dontUnpack = true;
   nativeBuildInputs = [ makeWrapper ];

@@ -4,6 +4,8 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-17
+
 ### Added
 
 - optional OpenCode integration: Home Manager installs it and shares mutable settings and plugin declarations without moving provider auth or package caches
