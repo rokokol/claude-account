@@ -9,6 +9,10 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 - optional OpenCode integration: Home Manager installs it and shares mutable settings and plugin declarations without moving provider auth or package caches
 - `claude-account opencode init|status` for the same safe migration outside Nix
 
+### Changed
+
+- `ensure` shares the default `$XDG_CONFIG_HOME/opencode` directory without requiring an explicit setting
+
 ## [1.0.0] - 2026-08-13
 
 Split out of [rokokol/huix](https://github.com/rokokol/huix), where it was a script and an activation hook in the Home Manager configuration

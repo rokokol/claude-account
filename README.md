@@ -25,6 +25,7 @@ Came over from my rice, **[rokokol/huix](https://github.com/rokokol/huix)**
 ## Contents
 
 - [How it switches](#how-it-switches)
+- [OpenCode](#opencode)
 - [What is per-account by default and what is not](#what-is-per-account-by-default-and-what-is-not)
 - [Commands](#commands)
 - [Install](#install)
@@ -56,7 +57,7 @@ Paths resolve lazily, so a switch reaches sessions that are already open — the
 
 ## OpenCode
 
-OpenCode can use the same writable shared directory for its settings and plugin declarations without coupling provider accounts to Claude profiles. Its config directory becomes a relative link to `claude-shared/opencode`; `~/.local/share/opencode/auth.json`, sessions and databases remain local. Plugin package caches stay in `~/.cache/opencode`, so another host installs the shared plugin list into its own cache instead of syncing `node_modules`
+OpenCode can use the same writable shared directory for its settings and plugin declarations without coupling provider accounts to Claude profiles. Its default config directory, `$XDG_CONFIG_HOME/opencode` (`$HOME/.config/opencode` when `XDG_CONFIG_HOME` is unset), becomes a relative link to `claude-shared/opencode`; `~/.local/share/opencode/auth.json`, sessions and databases remain local. Plugin package caches stay in `~/.cache/opencode`, so another host installs the shared plugin list into its own cache instead of syncing `node_modules`
 
 ## What is per-account by default and what is not
 

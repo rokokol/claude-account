@@ -211,6 +211,17 @@ else
   fail "ensure did not migrate the configured OpenCode directory"
 fi
 
+world ensure-shares-default-opencode-config
+mkdir -p "$XDG_CONFIG_HOME/opencode"
+printf '{"plugin":[]}' >"$XDG_CONFIG_HOME/opencode/opencode.json"
+ca ensure >/dev/null 2>&1
+if [[ -L "$XDG_CONFIG_HOME/opencode" &&
+  "$(cat "$CLAUDE_ACCOUNT_SHARED_DIR/opencode/opencode.json")" == '{"plugin":[]}' ]]; then
+  ok
+else
+  fail "ensure did not migrate the default OpenCode directory"
+fi
+
 echo "init"
 
 # The shape a pre-profile machine has: a real ~/.claude with a token, shared work and a

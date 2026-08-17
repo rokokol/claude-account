@@ -59,7 +59,7 @@ CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 CLAUDE_DIR="${CLAUDE_ACCOUNT_DIR:-$HOME/.claude}" # the entry symlink CLAUDE_CONFIG_DIR points at
 SHARED_DIR="${CLAUDE_ACCOUNT_SHARED_DIR:-$DATA_HOME/claude-shared}"
 PROFILES_DIR="${CLAUDE_ACCOUNT_PROFILES_DIR:-$DATA_HOME/claude-profiles}"
-OPENCODE_CONFIG_DIR="${CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR:-}"
+OPENCODE_CONFIG_DIR="${CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR:-$CONFIG_HOME/opencode}"
 
 # What every profile shares, all of it plain files a sync tool can carry between machines.
 # projects/, history.jsonl, plans/, todos/, tasks/, file-history/ are the shared work: one job
