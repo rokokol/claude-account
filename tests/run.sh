@@ -222,6 +222,16 @@ else
   fail "ensure did not migrate the default OpenCode directory"
 fi
 
+# comm is 15 characters wide, and pgrep -x against a longer pattern matches nothing at all —
+# the session guards would be dead code, quietly, since their stderr is redirected away
+world pgrep-patterns-fit-the-comm-field
+oversized=$(grep -oE "pgrep -x '?[^ ']+" "$CA" | sed -E "s/^pgrep -x '?//; s/\\\\//g" | awk 'length > 15')
+if [[ -z "$oversized" ]]; then
+  ok
+else
+  fail "pgrep patterns longer than comm: $oversized"
+fi
+
 world ensure-does-not-invent-an-opencode-config
 ca ensure >/dev/null 2>&1
 if [[ ! -e "$XDG_CONFIG_HOME/opencode" && ! -e "$CLAUDE_ACCOUNT_SHARED_DIR/opencode" ]]; then

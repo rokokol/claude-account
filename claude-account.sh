@@ -99,8 +99,11 @@ claude_running() {
   pgrep -x claude >/dev/null 2>&1 || pgrep -x .claude-wrapped >/dev/null 2>&1
 }
 
+# The nixpkgs wrapper renames the real binary to .opencode-wrapped, and comm is capped at 15
+# characters, so that is where the kernel cuts it. Matching the full name can never succeed —
+# procps says so on stderr and returns 1, which the redirect below would swallow
 opencode_running() {
-  pgrep -x opencode >/dev/null 2>&1 || pgrep -x .opencode-wrapped >/dev/null 2>&1
+  pgrep -x opencode >/dev/null 2>&1 || pgrep -x '\.opencode-wrapp' >/dev/null 2>&1
 }
 
 # Every write below swaps the directory OpenCode reads its settings and plugins from, and it

@@ -169,7 +169,7 @@ export CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR=""
 ## Tests
 
 ```sh
-tests/run.sh              # 42 checks, nothing outside a scratch HOME
+tests/run.sh              # 43 checks, nothing outside a scratch HOME
 ```
 
 Every case gets a fresh `HOME` **and** a fresh `XDG_DATA_HOME`, and the three path overrides are pointed inside it too. Setting `HOME` alone is not enough — a session that exports `XDG_DATA_HOME`, as Home Manager does, would send the suite at the real profiles. `pgrep` is stubbed, so "is a session open" is something the suite decides rather than something it inherits from the machine running it
