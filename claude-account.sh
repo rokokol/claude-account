@@ -50,7 +50,10 @@ Environment:
   CLAUDE_ACCOUNT_SHARED_DIR    what they share (default: $XDG_DATA_HOME/claude-shared)
   CLAUDE_ACCOUNT_SHARED        space-separated list of shared entries, replacing the default
   CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR
-                               OpenCode config directory Home Manager keeps shared
+                               OpenCode config directory ensure keeps shared
+                               (default: $XDG_CONFIG_HOME/opencode). Set it empty to keep
+                               ensure away from that directory for good; opencode init
+                               ignores the opt-out, being an explicit request
 EOF
 }
 
@@ -59,7 +62,9 @@ CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 CLAUDE_DIR="${CLAUDE_ACCOUNT_DIR:-$HOME/.claude}" # the entry symlink CLAUDE_CONFIG_DIR points at
 SHARED_DIR="${CLAUDE_ACCOUNT_SHARED_DIR:-$DATA_HOME/claude-shared}"
 PROFILES_DIR="${CLAUDE_ACCOUNT_PROFILES_DIR:-$DATA_HOME/claude-profiles}"
-OPENCODE_CONFIG_DIR="${CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR:-$CONFIG_HOME/opencode}"
+# ${VAR-default}, not ${VAR:-default}: an empty value stays empty, which is how ensure is
+# told to leave the OpenCode config alone. The explicit opencode commands ignore that
+OPENCODE_CONFIG_DIR="${CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR-$CONFIG_HOME/opencode}"
 
 # What every profile shares, all of it plain files a sync tool can carry between machines.
 # projects/, history.jsonl, plans/, todos/, tasks/, file-history/ are the shared work: one job
@@ -288,6 +293,7 @@ cmd_ensure() {
 
   fi
 
+  # Empty means opted out of sharing the OpenCode config; see the assignment above
   if [[ -n "$OPENCODE_CONFIG_DIR" ]]; then
     ensure_opencode_config "$OPENCODE_CONFIG_DIR"
   fi

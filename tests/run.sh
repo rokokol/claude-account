@@ -222,6 +222,15 @@ else
   fail "ensure did not migrate the default OpenCode directory"
 fi
 
+world ensure-leaves-opencode-alone-when-opted-out
+mkdir -p "$XDG_CONFIG_HOME/opencode"
+CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR="" ca ensure >/dev/null 2>&1
+if [[ ! -L "$XDG_CONFIG_HOME/opencode" && ! -e "$CLAUDE_ACCOUNT_SHARED_DIR/opencode" ]]; then
+  ok
+else
+  fail "ensure migrated the OpenCode directory the empty setting opted out of"
+fi
+
 echo "init"
 
 # The shape a pre-profile machine has: a real ~/.claude with a token, shared work and a
@@ -326,6 +335,15 @@ if [[ -L "$XDG_CONFIG_HOME/opencode" &&
   ok
 else
   fail "opencode init did not move config into shared"
+fi
+
+world opencode-init-ignores-the-ensure-opt-out
+mkdir -p "$XDG_CONFIG_HOME/opencode"
+CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR="" ca opencode init >/dev/null
+if [[ -L "$XDG_CONFIG_HOME/opencode" ]]; then
+  ok
+else
+  fail "an explicit opencode init obeyed the opt-out meant for ensure"
 fi
 
 world opencode-init-is-idempotent

@@ -4,6 +4,10 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 
 ## [Unreleased]
 
+### Added
+
+- an empty `CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR` keeps `ensure` away from the OpenCode config directory. The default stayed unreachable since it moved to `$XDG_CONFIG_HOME/opencode`: `${VAR:-default}` reads an empty value as unset
+
 ## [1.1.0] - 2026-08-18
 
 ### Added

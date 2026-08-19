@@ -145,7 +145,7 @@ Needs `bash` 4+ (associative arrays), `jq`, `pgrep`, and coreutils. Then export 
 
 Package recipes can stage the same layout without duplicating it: `DESTDIR="$pkgdir" PREFIX=/usr ./install.sh`
 
-To share existing OpenCode settings and plugins, close OpenCode and run:
+Nothing there runs `ensure` for you, so the OpenCode config stays where it is until you say otherwise. To share existing settings and plugins, close OpenCode and run:
 
 ```sh
 claude-account opencode init
@@ -153,10 +153,18 @@ claude-account opencode init
 
 It moves `~/.config/opencode` to `~/.local/share/claude-shared/opencode` and leaves a relative symlink. Install OpenCode with your distribution's package manager; the non-Nix installer deliberately does not choose one for you
 
+If you do call `ensure` by hand — after an upgrade adds a shared entry, say — it maintains that link too. Export the opt-out from the same shell profile to keep it away from the directory for good:
+
+```sh
+export CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR=""
+```
+
+`opencode init` ignores it, being an explicit request rather than a background repair
+
 ## Tests
 
 ```sh
-tests/run.sh              # 26 checks, nothing outside a scratch HOME
+tests/run.sh              # 36 checks, nothing outside a scratch HOME
 ```
 
 Every case gets a fresh `HOME` **and** a fresh `XDG_DATA_HOME`, and the three path overrides are pointed inside it too. Setting `HOME` alone is not enough — a session that exports `XDG_DATA_HOME`, as Home Manager does, would send the suite at the real profiles. `pgrep` is stubbed, so "is a session open" is something the suite decides rather than something it inherits from the machine running it
