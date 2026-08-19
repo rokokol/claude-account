@@ -62,6 +62,8 @@ Paths resolve lazily, so a switch reaches sessions that are already open — the
 
 OpenCode can use the same writable shared directory for its settings and plugin declarations without coupling provider accounts to Claude profiles. Its default config directory, `$XDG_CONFIG_HOME/opencode` (`$HOME/.config/opencode` when `XDG_CONFIG_HOME` is unset), becomes a relative link to `claude-shared/opencode`; `~/.local/share/opencode/auth.json`, sessions and databases remain local. Plugin package caches stay in `~/.cache/opencode`, so another host installs the shared plugin list into its own cache instead of syncing `node_modules`
 
+`ensure` does it, so under Home Manager it happens on activation whether or not the module installs OpenCode — the package can come from anywhere. Set `opencode.share = false`, or `CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR=""` outside Nix, to leave the directory alone; `claude-account opencode init` sets it up on demand either way
+
 ## What is per-account by default and what is not
 
 | stays in the profile | is shared |
@@ -111,7 +113,7 @@ A hand-written global `CLAUDE.md` is **never** auto-promoted to shared: it is pa
 }
 ```
 
-That installs the switcher, pins `CLAUDE_CONFIG_DIR` and repairs the active profile's links on every activation. `opencode.enable` also installs OpenCode and keeps its mutable config shared. Install Claude Code itself however you already do — this module deliberately does not, so it never fights your pin
+That installs the switcher, pins `CLAUDE_CONFIG_DIR`, repairs the active profile's links on every activation and keeps the OpenCode config shared; `opencode.enable` adds the OpenCode package itself. Install Claude Code however you already do — this module deliberately does not, so it never fights your pin
 
 | option | what it does | default |
 | --- | --- | --- |
@@ -120,7 +122,8 @@ That installs the switcher, pins `CLAUDE_CONFIG_DIR` and repairs the active prof
 | `claudeDir` | the entry symlink | `$HOME/.claude` |
 | `pinConfigDir` | export `CLAUDE_CONFIG_DIR` | `true` |
 | `repairOnActivation` | run `ensure` on every activation | `true` |
-| `opencode.enable` | install OpenCode and share its config | `false` |
+| `opencode.enable` | install the OpenCode package | `false` |
+| `opencode.share` | keep the OpenCode config in `claude-shared` | `true` |
 | `opencode.configDir` | mutable OpenCode config directory to share | `$XDG_CONFIG_HOME/opencode` |
 
 ### Why `CLAUDE_CONFIG_DIR` has to be pinned

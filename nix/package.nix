@@ -17,6 +17,7 @@
   profilesDir ? null,
   sharedDir ? null,
   sharedEntries ? null,
+  # null leaves the script's default in place; "" is its opt-out from sharing that directory
   opencodeConfigDir ? null,
 }:
 

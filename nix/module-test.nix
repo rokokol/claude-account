@@ -30,10 +30,6 @@ let
           type = lib.types.attrsOf lib.types.anything;
           default = { };
         };
-        xdg.configHome = lib.mkOption {
-          type = lib.types.str;
-          default = "$HOME/.config";
-        };
       };
     };
 
@@ -79,6 +75,14 @@ let
     };
   };
 
+  # Sharing is the default, so the opt-out is the case worth pinning down
+  opencodeUnshared = eval {
+    programs.claude-account = {
+      enable = true;
+      opencode.share = false;
+    };
+  };
+
   off = eval { programs.claude-account.enable = false; };
 in
 {
@@ -100,4 +104,7 @@ in
 
   opencodePackages = lib.concatMapStringsSep " " toString withOpenCode.home.packages;
   opencodePackage = toString withOpenCode.programs.claude-account.package;
+
+  unsharedPackages = lib.concatMapStringsSep " " toString opencodeUnshared.home.packages;
+  unsharedPackage = toString opencodeUnshared.programs.claude-account.package;
 }

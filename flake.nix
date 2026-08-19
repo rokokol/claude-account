@@ -188,7 +188,12 @@
                 want '.offActivation == {}' "the repair survives enable = false"
                 want '.offSessionVariables == {}' "the pin survives enable = false"
                 want '.opencodePackages | test("opencode")' "OpenCode is not installed when enabled"
-                want '.opencodePackage | test("claude-account")' "OpenCode settings did not reach the switcher"
+
+                # Sharing rides on share, not on enable: installing nothing still shares, and
+                # only the opt-out has to reach the wrapper as a setting of its own
+                want '.unsharedPackages | test("opencode") | not' "OpenCode is installed while disabled"
+                want '.opencodePackage == .package' "installing OpenCode changed the switcher"
+                want '.unsharedPackage != .package' "the OpenCode opt-out never reached the switcher"
                 touch $out
               '';
 

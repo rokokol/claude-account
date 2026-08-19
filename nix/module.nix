@@ -26,7 +26,8 @@ in
           sharedDir
           sharedEntries
           ;
-        opencodeConfigDir = if cfg.opencode.enable then cfg.opencode.configDir else null;
+        # "" is the opt-out the script reads; null leaves it to the script's own default
+        opencodeConfigDir = if cfg.opencode.share then cfg.opencode.configDir else "";
       };
       defaultText = lib.literalExpression "claude-account carrying the settings below";
       description = "The package to install; it carries its own settings";
@@ -76,12 +77,27 @@ in
     };
 
     opencode = {
-      enable = lib.mkEnableOption "sharing mutable OpenCode settings and plugins";
+      enable = lib.mkEnableOption "installing OpenCode alongside the switcher";
+
+      share = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = ''
+          Let `ensure` keep the mutable OpenCode configuration directory inside the shared
+          directory. It happens whether or not `opencode.enable` installs the package, since
+          OpenCode may well come from somewhere else; turn it off to leave that directory
+          alone. Provider auth, sessions and package caches are never shared either way
+        '';
+      };
 
       configDir = lib.mkOption {
-        type = lib.types.str;
-        default = "${config.xdg.configHome}/opencode";
-        description = "The mutable OpenCode configuration directory to share";
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        example = "\${config.xdg.configHome}/opencode";
+        description = ''
+          The mutable OpenCode configuration directory to share. Defaults to
+          `$XDG_CONFIG_HOME/opencode`
+        '';
       };
     };
 

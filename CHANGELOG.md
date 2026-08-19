@@ -7,6 +7,11 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 ### Added
 
 - an empty `CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR` keeps `ensure` away from the OpenCode config directory. The default stayed unreachable since it moved to `$XDG_CONFIG_HOME/opencode`: `${VAR:-default}` reads an empty value as unset
+- `opencode.share` to say the same thing from Home Manager
+
+### Changed
+
+- `opencode.enable` now only installs the OpenCode package: sharing its config follows `opencode.share`, which is on by default and independent of where OpenCode comes from
 
 ## [1.1.0] - 2026-08-18
 
