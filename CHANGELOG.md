@@ -11,6 +11,7 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 
 ### Fixed
 
+- every write to the OpenCode config directory now refuses while a session is open, not just the migration; an activation over an already shared config stays a silent no-op
 - `ensure` no longer creates an OpenCode config directory on a host that has no OpenCode, where the empty directory would sync on to every other host. It takes over one that already exists, on either side; `opencode init` still sets one up from nothing
 
 ### Changed

@@ -241,6 +241,23 @@ else
   fail "a synced shared OpenCode config never reached the second host"
 fi
 
+world ensure-refuses-a-live-session-while-adopting
+mkdir -p "$CLAUDE_ACCOUNT_SHARED_DIR/opencode"
+if FAKE_OPENCODE_RUNNING=1 ca ensure >/dev/null 2>&1 || [[ -e "$XDG_CONFIG_HOME/opencode" ]]; then
+  fail "ensure swapped the config directory under a live session"
+else
+  ok
+fi
+
+world ensure-is-quiet-while-opencode-runs-on-a-shared-config
+mkdir -p "$CLAUDE_ACCOUNT_SHARED_DIR/opencode" "$XDG_CONFIG_HOME"
+ln -s ../.local/share/claude-shared/opencode "$XDG_CONFIG_HOME/opencode"
+if FAKE_OPENCODE_RUNNING=1 ca ensure >/dev/null 2>&1; then
+  ok
+else
+  fail "an activation with OpenCode open failed over a config that was already shared"
+fi
+
 world ensure-leaves-opencode-alone-when-opted-out
 mkdir -p "$XDG_CONFIG_HOME/opencode"
 CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR="" ca ensure >/dev/null 2>&1
@@ -371,6 +388,13 @@ if [[ -L "$XDG_CONFIG_HOME/opencode" ]]; then
   ok
 else
   fail "an explicit opencode init obeyed the opt-out meant for ensure"
+fi
+
+world opencode-init-refuses-a-live-session-on-a-fresh-host
+if FAKE_OPENCODE_RUNNING=1 ca opencode init >/dev/null 2>&1 || [[ -e "$XDG_CONFIG_HOME/opencode" ]]; then
+  fail "opencode init pointed a live session at a config directory it had not read"
+else
+  ok
 fi
 
 world opencode-init-is-idempotent

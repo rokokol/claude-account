@@ -18,7 +18,9 @@ Usage:
                                from a clean terminal with no claude sessions open
   claude-account ensure        repair the active profile's symlinks (home-manager calls this)
   claude-account path          path of the active profile
-  claude-account opencode init move OpenCode config into the shared directory
+  claude-account opencode init move OpenCode config into the shared directory. Refuses while
+                               an opencode session is open — it reads its settings and plugins
+                               at startup, so swapping the directory under it loses writes
   claude-account opencode status
                                show whether OpenCode config is shared
   claude-account --help        this help
@@ -99,6 +101,14 @@ claude_running() {
 
 opencode_running() {
   pgrep -x opencode >/dev/null 2>&1 || pgrep -x .opencode-wrapped >/dev/null 2>&1
+}
+
+# Every write below swaps the directory OpenCode reads its settings and plugins from, and it
+# reads them at startup — a live session would keep serving the old contents and write the
+# new ones back over them. claude survives the same trick because its paths resolve lazily
+require_opencode_closed() {
+  opencode_running && die "opencode is running — close it before changing its config directory"
+  return 0
 }
 
 # The entry symlink is the state — nothing else to keep in sync with it. Empty means no profile
@@ -192,13 +202,16 @@ ensure_opencode_config() {
     return
   fi
 
-  mkdir -p "$SHARED_DIR"
   target=$(realpath -m "$shared_config")
 
   if [[ -L "$config_dir" ]]; then
     actual=$(realpath -m "$config_dir")
     [[ "$actual" == "$target" ]] ||
       die "$config_dir points to $actual, not the shared OpenCode config"
+    # Already shared: the activation hook lands here every time, so it must stay a no-op
+    # rather than a complaint about whatever session the user has open
+    [[ -d "$shared_config" ]] && return
+    require_opencode_closed
     mkdir -p "$shared_config"
     return
   fi
@@ -207,9 +220,11 @@ ensure_opencode_config() {
     [[ -d "$config_dir" ]] || die "$config_dir is not a directory"
     [[ ! -e "$shared_config" ]] ||
       die "$config_dir and $shared_config both exist — merge them by hand"
-    opencode_running && die "opencode is running — close it before migrating its config"
+    require_opencode_closed
+    mkdir -p "$SHARED_DIR"
     mv "$config_dir" "$shared_config"
   else
+    require_opencode_closed
     mkdir -p "$shared_config"
   fi
 

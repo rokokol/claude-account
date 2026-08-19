@@ -64,6 +64,8 @@ OpenCode can use the same writable shared directory for its settings and plugin 
 
 `ensure` does it, so under Home Manager it happens on activation whether or not the module installs OpenCode — the package can come from anywhere. It adopts a config that already exists, on either side, and never invents one: a host without OpenCode does not grow a config directory for it. Set `opencode.share = false`, or `CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR=""` outside Nix, to leave the directory alone even so; `claude-account opencode init` sets it up on demand either way
 
+Any of that which would actually change the directory refuses while an OpenCode session is open: it reads settings and plugins at startup and writes them back on exit, so a live session would serve the old contents and then save them over the new ones. Repeat activations over a config that is already shared change nothing, and stay quiet whatever is running
+
 ## What is per-account by default and what is not
 
 | stays in the profile | is shared |
@@ -167,7 +169,7 @@ export CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR=""
 ## Tests
 
 ```sh
-tests/run.sh              # 39 checks, nothing outside a scratch HOME
+tests/run.sh              # 42 checks, nothing outside a scratch HOME
 ```
 
 Every case gets a fresh `HOME` **and** a fresh `XDG_DATA_HOME`, and the three path overrides are pointed inside it too. Setting `HOME` alone is not enough — a session that exports `XDG_DATA_HOME`, as Home Manager does, would send the suite at the real profiles. `pgrep` is stubbed, so "is a session open" is something the suite decides rather than something it inherits from the machine running it
