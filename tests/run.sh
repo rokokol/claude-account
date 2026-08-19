@@ -222,6 +222,25 @@ else
   fail "ensure did not migrate the default OpenCode directory"
 fi
 
+world ensure-does-not-invent-an-opencode-config
+ca ensure >/dev/null 2>&1
+if [[ ! -e "$XDG_CONFIG_HOME/opencode" && ! -e "$CLAUDE_ACCOUNT_SHARED_DIR/opencode" ]]; then
+  ok
+else
+  fail "ensure made an OpenCode config on a host that has no OpenCode"
+fi
+
+world ensure-adopts-a-shared-opencode-config
+mkdir -p "$CLAUDE_ACCOUNT_SHARED_DIR/opencode"
+printf '{"plugin":[]}' >"$CLAUDE_ACCOUNT_SHARED_DIR/opencode/opencode.json"
+ca ensure >/dev/null 2>&1
+if [[ -L "$XDG_CONFIG_HOME/opencode" &&
+  "$(cat "$XDG_CONFIG_HOME/opencode/opencode.json")" == '{"plugin":[]}' ]]; then
+  ok
+else
+  fail "a synced shared OpenCode config never reached the second host"
+fi
+
 world ensure-leaves-opencode-alone-when-opted-out
 mkdir -p "$XDG_CONFIG_HOME/opencode"
 CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR="" ca ensure >/dev/null 2>&1
@@ -335,6 +354,14 @@ if [[ -L "$XDG_CONFIG_HOME/opencode" &&
   ok
 else
   fail "opencode init did not move config into shared"
+fi
+
+world opencode-init-creates-a-shared-config-from-nothing
+ca opencode init >/dev/null
+if [[ -L "$XDG_CONFIG_HOME/opencode" && -d "$CLAUDE_ACCOUNT_SHARED_DIR/opencode" ]]; then
+  ok
+else
+  fail "an explicit opencode init did not set the shared config up"
 fi
 
 world opencode-init-ignores-the-ensure-opt-out

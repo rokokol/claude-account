@@ -53,7 +53,9 @@ Environment:
                                OpenCode config directory ensure keeps shared
                                (default: $XDG_CONFIG_HOME/opencode). Set it empty to keep
                                ensure away from that directory for good; opencode init
-                               ignores the opt-out, being an explicit request
+                               ignores the opt-out, being an explicit request. ensure only
+                               adopts a config that already exists on one side or the other,
+                               so a host without OpenCode never grows one
 EOF
 }
 
@@ -178,10 +180,17 @@ ensure_profile() {
   done
 }
 
+# A second argument of "adopt" means take over a config that already exists on either side
+# but do not conjure one: a host without OpenCode has no business growing a config directory
+# for it, and the empty directory would ride the sync to every other host
 ensure_opencode_config() {
-  local config_dir="$1"
+  local config_dir="$1" mode="${2:-}"
   local shared_config="$SHARED_DIR/opencode"
   local config_parent target actual
+
+  if [[ "$mode" == adopt && ! -e "$config_dir" && ! -L "$config_dir" && ! -e "$shared_config" ]]; then
+    return
+  fi
 
   mkdir -p "$SHARED_DIR"
   target=$(realpath -m "$shared_config")
@@ -295,7 +304,7 @@ cmd_ensure() {
 
   # Empty means opted out of sharing the OpenCode config; see the assignment above
   if [[ -n "$OPENCODE_CONFIG_DIR" ]]; then
-    ensure_opencode_config "$OPENCODE_CONFIG_DIR"
+    ensure_opencode_config "$OPENCODE_CONFIG_DIR" adopt
   fi
 }
 

@@ -62,7 +62,7 @@ Paths resolve lazily, so a switch reaches sessions that are already open — the
 
 OpenCode can use the same writable shared directory for its settings and plugin declarations without coupling provider accounts to Claude profiles. Its default config directory, `$XDG_CONFIG_HOME/opencode` (`$HOME/.config/opencode` when `XDG_CONFIG_HOME` is unset), becomes a relative link to `claude-shared/opencode`; `~/.local/share/opencode/auth.json`, sessions and databases remain local. Plugin package caches stay in `~/.cache/opencode`, so another host installs the shared plugin list into its own cache instead of syncing `node_modules`
 
-`ensure` does it, so under Home Manager it happens on activation whether or not the module installs OpenCode — the package can come from anywhere. Set `opencode.share = false`, or `CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR=""` outside Nix, to leave the directory alone; `claude-account opencode init` sets it up on demand either way
+`ensure` does it, so under Home Manager it happens on activation whether or not the module installs OpenCode — the package can come from anywhere. It adopts a config that already exists, on either side, and never invents one: a host without OpenCode does not grow a config directory for it. Set `opencode.share = false`, or `CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR=""` outside Nix, to leave the directory alone even so; `claude-account opencode init` sets it up on demand either way
 
 ## What is per-account by default and what is not
 
@@ -167,7 +167,7 @@ export CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR=""
 ## Tests
 
 ```sh
-tests/run.sh              # 36 checks, nothing outside a scratch HOME
+tests/run.sh              # 39 checks, nothing outside a scratch HOME
 ```
 
 Every case gets a fresh `HOME` **and** a fresh `XDG_DATA_HOME`, and the three path overrides are pointed inside it too. Setting `HOME` alone is not enough — a session that exports `XDG_DATA_HOME`, as Home Manager does, would send the suite at the real profiles. `pgrep` is stubbed, so "is a session open" is something the suite decides rather than something it inherits from the machine running it
