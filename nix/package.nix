@@ -4,6 +4,7 @@
 {
   lib,
   stdenvNoCC,
+  installShellFiles,
   makeWrapper,
   bash,
   coreutils,
@@ -27,6 +28,14 @@ let
     name = "claude-account.sh";
     path = ../claude-account.sh;
   };
+  bashCompletion = builtins.path {
+    name = "claude-account.bash";
+    path = ../completions/claude-account.bash;
+  };
+  zshCompletion = builtins.path {
+    name = "_claude-account";
+    path = ../completions/_claude-account;
+  };
 
   # Left out when unset, so the script's own default stays the single source of it
   setDefault = var: value: lib.optionalString (value != null) ''--set-default ${var} "${value}"'';
@@ -42,10 +51,13 @@ in
 
 stdenvNoCC.mkDerivation {
   pname = "claude-account";
-  version = "1.1.1";
+  version = "1.2.0";
 
   dontUnpack = true;
-  nativeBuildInputs = [ makeWrapper ];
+  nativeBuildInputs = [
+    installShellFiles
+    makeWrapper
+  ];
   buildInputs = [ bash ];
 
   installPhase = ''
@@ -53,6 +65,9 @@ stdenvNoCC.mkDerivation {
 
     install -Dm755 ${script} $out/bin/claude-account
     patchShebangs $out/bin
+
+    installShellCompletion --bash --name claude-account ${bashCompletion}
+    installShellCompletion --zsh --name _claude-account ${zshCompletion}
 
     # --set-default, not --set: an override from the caller's environment still wins
     wrapProgram $out/bin/claude-account \

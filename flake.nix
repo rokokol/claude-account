@@ -24,6 +24,10 @@
         name = "claude-account-tests";
         path = ./tests;
       };
+      completionsDir = builtins.path {
+        name = "claude-account-completions";
+        path = ./completions;
+      };
     in
     {
       packages = forAllSystems (pkgs: rec {
@@ -65,6 +69,7 @@
                 mkdir -p repo
                 cp ${switcher} repo/claude-account.sh
                 cp -r ${testsDir} repo/tests
+                cp -r ${completionsDir} repo/completions
                 chmod -R +w repo
                 patchShebangs repo
                 bash repo/tests/run.sh
@@ -203,14 +208,17 @@
                 nativeBuildInputs = [
                   pkgs.shellcheck
                   pkgs.shfmt
+                  pkgs.zsh
                 ];
               }
               ''
-                files="${switcher} ${testsDir}/run.sh ${testsDir}/stub/pgrep"
+                files="${switcher} ${testsDir}/run.sh ${testsDir}/stub/pgrep ${completionsDir}/claude-account.bash"
                 # shellcheck disable=SC2086
                 shellcheck $files
                 # shellcheck disable=SC2086
                 shfmt -d -i 2 -ci $files
+                # zsh is not shellcheck's language; a parse is what can be checked
+                zsh -n ${completionsDir}/_claude-account
                 touch $out
               '';
         }

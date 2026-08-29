@@ -465,6 +465,25 @@ else
   ok
 fi
 
+# The completion files spell the command list by hand; the --help text is the declaration
+# they must not drift from
+world completions-know-every-command
+mapfile -t commands < <(ca --help | sed -n 's/^  claude-account \([a-z][a-z-]*\).*/\1/p' | sort -u)
+if ((${#commands[@]} < 5)); then
+  fail "--help lists no commands — the drift check is checking nothing"
+else
+  drifted=""
+  for cmd in "${commands[@]}"; do
+    grep -qw "$cmd" "$REPO/completions/claude-account.bash" || drifted+=" bash:$cmd"
+    grep -q "'$cmd:" "$REPO/completions/_claude-account" || drifted+=" zsh:$cmd"
+  done
+  if [[ -z "$drifted" ]]; then
+    ok
+  else
+    fail "commands missing from completions:$drifted"
+  fi
+fi
+
 if ((fails)); then
   printf '\n%d failed\n' "$fails"
   exit 1

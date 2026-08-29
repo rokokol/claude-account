@@ -4,6 +4,12 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-29
+
+### Added
+
+- bash and zsh completions, installed by the package and by `install.sh`; profile names for `use` complete live through `claude-account list`, and the suite checks the spelled command list against the `--help` text
+
 ## [1.1.1] - 2026-08-19
 
 ### Added

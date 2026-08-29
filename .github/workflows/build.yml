@@ -31,6 +31,8 @@ jobs:
         run: |
           PREFIX=$PWD/out ./install.sh
           test -L out/bin/claude-account
+          test -f out/share/bash-completion/completions/claude-account
+          test -f out/share/zsh/site-functions/_claude-account
           CLAUDE_ACCOUNT=$PWD/out/bin/claude-account ./tests/run.sh
           DESTDIR=$PWD/stage PREFIX=/usr ./install.sh
           test -L stage/usr/bin/claude-account
@@ -45,5 +47,7 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - uses: cachix/install-nix-action@v31
-      - run: nix run nixpkgs#shellcheck -- install.sh claude-account.sh tests/run.sh tests/stub/*
-      - run: nix run nixpkgs#shfmt -- -d -i 2 -ci install.sh claude-account.sh tests/run.sh tests/stub/*
+      - run: nix run nixpkgs#shellcheck -- install.sh claude-account.sh tests/run.sh tests/stub/* completions/claude-account.bash
+      - run: nix run nixpkgs#shfmt -- -d -i 2 -ci install.sh claude-account.sh tests/run.sh tests/stub/* completions/claude-account.bash
+      # zsh is not shellcheck's language; a parse is what can be checked
+      - run: nix run nixpkgs#zsh -- -n completions/_claude-account

@@ -1,0 +1,47 @@
+#compdef claude-account
+# zsh completion for claude-account. The command list is spelled here by hand;
+# tests/run.sh checks it against the --help text, so a command added there fails the
+# suite until it lands here
+
+_claude_account_profiles() {
+  # Live names from the tool itself; the active one leads with a star
+  local -a names
+  names=(${(f)"$(claude-account list 2>/dev/null | awk '{ if ($1 == "*") print $2; else print $1 }')"})
+  _describe -t profiles 'profile' names
+}
+
+_claude-account() {
+  local -a commands=(
+    'list:list profiles, the active one marked with a star'
+    'current:name of the active profile'
+    'use:make a profile active'
+    'add:create a new profile'
+    'init:migrate an existing ~/.claude into a profile'
+    'ensure:repair the active profile symlinks'
+    'path:path of the active profile'
+    'opencode:share OpenCode config between profiles'
+    'help:usage'
+  )
+
+  if ((CURRENT == 2)); then
+    _describe -t commands 'claude-account command' commands
+    return
+  fi
+
+  case "$words[2]" in
+    use)
+      _claude_account_profiles
+      ;;
+    opencode)
+      if ((CURRENT == 3)); then
+        local -a subcommands=(
+          'init:move OpenCode config into the shared directory'
+          'status:show whether OpenCode config is shared'
+        )
+        _describe -t commands 'opencode command' subcommands
+      fi
+      ;;
+  esac
+}
+
+_claude-account "$@"

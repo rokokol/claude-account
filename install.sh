@@ -52,4 +52,7 @@ install -Dm755 "$here/claude-account.sh" "$share/claude-account.sh"
 install -d "$root/bin"
 ln -sfn ../share/claude-account/claude-account.sh "$root/bin/claude-account"
 
+install -Dm644 "$here/completions/claude-account.bash" "$root/share/bash-completion/completions/claude-account"
+install -Dm644 "$here/completions/_claude-account" "$root/share/zsh/site-functions/_claude-account"
+
 echo "installed to $share, linked into $root/bin"
