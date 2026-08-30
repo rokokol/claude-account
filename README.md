@@ -37,7 +37,6 @@ Came over from my rice, **[rokokol/huix](https://github.com/rokokol/huix)**
   - [Any other distribution](#any-other-distribution)
 - [Tests](#tests)
 - [Layout](#layout)
-- [License](#license)
 
 ## How it switches
 
@@ -184,7 +183,3 @@ nix/                 package.nix, module.nix, module-test.nix
 tests/               run.sh and the pgrep stub
 install.sh           for systems without Nix
 ```
-
-## License
-
-MIT
