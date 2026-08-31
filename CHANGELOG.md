@@ -4,6 +4,19 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 
 ## [Unreleased]
 
+### Added
+
+- a `VERSION` file as the one place the version lives: `nix/package.nix` reads it, `claude-account --version`/`-v` and `./install.sh --version`/`-v` print it, and CI refuses a release whose `CHANGELOG.md` has no heading for it
+- `-f` as the short form of `init --force`, in the tool and both its completion files
+- `--uninstall` by manifest: the install writes `share/claude-account/install-manifest` naming every file it created, and uninstall consumes it — installs made before the manifest are still removed by a fixed list for one release
+- a dependency preflight that installs nothing on its own: `jq` and `pgrep` are named with the distribution's own install command as a runnable `$` line; `claude` itself is deliberately never checked
+- tab completion for `install.sh` itself (`source completions/install.sh.bash` or `.zsh`), with a drift check that fails the lint when a flag exists in only one of the three places
+- distro tests: `tests/distro.sh` installs for real, as root, in `debian`/`ubuntu`/`archlinux`/`fedora` `:latest` containers by running the preflight's own printed guidance, then drives the suite against the installed copy and uninstalls by the manifest; CI runs them on every push to master and weekly, never on pull requests, with one README badge per distribution
+
+### Changed
+
+- the shell lint's file list lives only in the flake's `scripts-lint` check; the CI shell job builds that check instead of repeating the commands
+
 ## [1.2.0] - 2026-08-29
 
 ### Added

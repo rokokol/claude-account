@@ -12,11 +12,16 @@ _claude_account() {
   local cmd=${COMP_WORDS[1]-}
 
   if ((COMP_CWORD == 1)); then
-    mapfile -t COMPREPLY < <(compgen -W "list current use add init ensure path opencode help" -- "$cur")
+    mapfile -t COMPREPLY < <(compgen -W "list current use add init ensure path opencode help --version" -- "$cur")
     return
   fi
 
   case "$cmd" in
+    init)
+      if ((COMP_CWORD == 2)); then
+        mapfile -t COMPREPLY < <(compgen -W "-f --force" -- "$cur")
+      fi
+      ;;
     use)
       mapfile -t COMPREPLY < <(compgen -W "$(_claude_account_profiles)" -- "$cur")
       ;;

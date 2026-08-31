@@ -9,6 +9,10 @@
 ![Nix](https://img.shields.io/badge/Nix-flake-7EBAE4?style=flat&logo=nixos&logoColor=white)
 [![license](https://img.shields.io/badge/MIT-3DA639?style=flat)](LICENSE)
 [![build](https://github.com/rokokol/claude-account/actions/workflows/build.yml/badge.svg)](https://github.com/rokokol/claude-account/actions/workflows/build.yml)
+[![debian](https://github.com/rokokol/claude-account/actions/workflows/distro-debian.yml/badge.svg)](https://github.com/rokokol/claude-account/actions/workflows/distro-debian.yml)
+[![ubuntu](https://github.com/rokokol/claude-account/actions/workflows/distro-ubuntu.yml/badge.svg)](https://github.com/rokokol/claude-account/actions/workflows/distro-ubuntu.yml)
+[![arch](https://github.com/rokokol/claude-account/actions/workflows/distro-arch.yml/badge.svg)](https://github.com/rokokol/claude-account/actions/workflows/distro-arch.yml)
+[![fedora](https://github.com/rokokol/claude-account/actions/workflows/distro-fedora.yml/badge.svg)](https://github.com/rokokol/claude-account/actions/workflows/distro-fedora.yml)
 
 </div>
 
@@ -145,7 +149,7 @@ cd claude-account
 sudo ./install.sh          # PREFIX=~/.local ./install.sh for a user install
 ```
 
-Needs `bash` 4+ (associative arrays), `jq`, `pgrep`, and coreutils. Then export `CLAUDE_CONFIG_DIR="$HOME/.claude"` from your shell profile, for the reason above
+Needs `bash` 4+ (associative arrays), `jq`, `pgrep`, and coreutils — a failed preflight names what is missing and prints your distribution's own install command as a runnable `$` line; nothing is installed on your behalf. Every file the install writes lands in an install manifest, and `./install.sh --uninstall` consumes it. Tab completion for the installer is in the checkout: `source completions/install.sh.bash` (or `.zsh`). Then export `CLAUDE_CONFIG_DIR="$HOME/.claude"` from your shell profile, for the reason above
 
 Package recipes can stage the same layout without duplicating it: `DESTDIR="$pkgdir" PREFIX=/usr ./install.sh`
 
@@ -168,7 +172,9 @@ export CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR=""
 ## Tests
 
 ```sh
-tests/run.sh              # 43 checks, nothing outside a scratch HOME
+tests/run.sh              # the behaviour suite, nothing outside a scratch HOME
+tests/distro.sh debian    # real root install in a docker container: preflight → its own
+                          # printed guidance → install → suite → uninstall; also ubuntu, arch, fedora
 ```
 
 Every case gets a fresh `HOME` **and** a fresh `XDG_DATA_HOME`, and the three path overrides are pointed inside it too. Setting `HOME` alone is not enough — a session that exports `XDG_DATA_HOME`, as Home Manager does, would send the suite at the real profiles. `pgrep` is stubbed, so "is a session open" is something the suite decides rather than something it inherits from the machine running it
@@ -179,7 +185,9 @@ Every case gets a fresh `HOME` **and** a fresh `XDG_DATA_HOME`, and the three pa
 
 ```
 claude-account.sh    the switcher
+VERSION              the one place the version lives — package.nix, --version and CI read it
+completions/         the tool's completions plus install.sh's own, spelled by hand
 nix/                 package.nix, module.nix, module-test.nix
-tests/               run.sh and the pgrep stub
+tests/               run.sh, distro.sh, check-completions.sh and the pgrep stub
 install.sh           for systems without Nix
 ```
