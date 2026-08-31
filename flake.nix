@@ -28,6 +28,14 @@
         name = "claude-account-completions";
         path = ./completions;
       };
+      installer = builtins.path {
+        name = "install.sh";
+        path = ./install.sh;
+      };
+      versionFile = builtins.path {
+        name = "claude-account-VERSION";
+        path = ./VERSION;
+      };
     in
     {
       packages = forAllSystems (pkgs: rec {
@@ -68,6 +76,7 @@
                 export HOME=$PWD
                 mkdir -p repo
                 cp ${switcher} repo/claude-account.sh
+                cp ${versionFile} repo/VERSION
                 cp -r ${testsDir} repo/tests
                 cp -r ${completionsDir} repo/completions
                 chmod -R +w repo
@@ -212,13 +221,21 @@
                 ];
               }
               ''
-                files="${switcher} ${testsDir}/run.sh ${testsDir}/stub/pgrep ${completionsDir}/claude-account.bash"
+                files="${switcher} ${installer} ${testsDir}/run.sh ${testsDir}/distro.sh ${testsDir}/check-completions.sh ${testsDir}/stub/pgrep ${completionsDir}/claude-account.bash ${completionsDir}/install.sh.bash"
                 # shellcheck disable=SC2086
                 shellcheck $files
                 # shellcheck disable=SC2086
                 shfmt -d -i 2 -ci $files
                 # zsh is not shellcheck's language; a parse is what can be checked
                 zsh -n ${completionsDir}/_claude-account
+                zsh -n ${completionsDir}/install.sh.zsh
+
+                # install.sh and its completions must not drift apart
+                mkdir -p repo/tests
+                cp ${installer} repo/install.sh
+                cp -r ${completionsDir} repo/completions
+                cp ${testsDir}/check-completions.sh repo/tests/
+                bash repo/tests/check-completions.sh
                 touch $out
               '';
         }

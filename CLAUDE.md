@@ -13,6 +13,7 @@ nix build
 nix flake check          # tests, the packaged command, its settings, module wiring, shell lint
 ./tests/run.sh           # a scratch HOME in, a filesystem layout out
 PREFIX=$PWD/out ./install.sh
+./tests/distro.sh debian # real root install in docker; also ubuntu, arch, fedora
 nix fmt -- --ci
 ```
 
@@ -20,8 +21,10 @@ nix fmt -- --ci
 
 ```
 claude-account.sh    the switcher
+VERSION              the one place the version lives — package.nix, --version and CI read it
+completions/         the tool's completions plus install.sh's own, spelled by hand
 nix/                 package.nix, module.nix, module-test.nix
-tests/               run.sh and the pgrep stub
+tests/               run.sh, distro.sh, check-completions.sh and the pgrep stub
 install.sh           for systems without Nix
 ```
 
@@ -33,4 +36,4 @@ install.sh           for systems without Nix
 
 ## CHANGELOG
 
-Every user-visible change adds a bullet under `## [Unreleased]` in `CHANGELOG.md`. A release moves those bullets under a new version heading with the date, tags `v<x.y.z>` and cuts a `gh release` whose notes are that section. Dates belong in this file and nowhere else — the no-dates rule holds everywhere but here, because Keep a Changelog asks for them
+Every user-visible change adds a bullet under `## [Unreleased]` in `CHANGELOG.md`. A release moves those bullets under a new version heading with the date **and bumps `VERSION` in the same commit** — CI refuses a `VERSION` whose heading is missing — then tags `v<x.y.z>` and cuts a `gh release` whose notes are that section. Dates belong in this file and nowhere else — the no-dates rule holds everywhere but here, because Keep a Changelog asks for them

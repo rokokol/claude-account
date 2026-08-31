@@ -361,6 +361,13 @@ else
   fail "--force did not get past the live-session check"
 fi
 
+legacy_world init-f-is-the-same-flag
+if FAKE_CLAUDE_RUNNING=1 ca init -f laptop >/dev/null 2>&1 && [[ "$(ca current)" == laptop ]]; then
+  ok
+else
+  fail "-f did not behave as --force"
+fi
+
 world use-warns-but-switches-while-a-session-is-open
 ca add work >/dev/null
 warning=$(FAKE_CLAUDE_RUNNING=1 ca use work 2>&1 >/dev/null)
@@ -482,6 +489,14 @@ else
   else
     fail "commands missing from completions:$drifted"
   fi
+fi
+
+world claude-account-prints-its-version
+want="claude-account $(cat "$REPO/VERSION")"
+if [[ "$(ca --version)" == "$want" && "$(ca -v)" == "$want" ]]; then
+  ok
+else
+  fail "--version does not answer with the VERSION file's number"
 fi
 
 if ((fails)); then

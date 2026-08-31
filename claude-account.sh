@@ -11,11 +11,12 @@ Usage:
   claude-account current       name of the active profile
   claude-account use <name>    make a profile active
   claude-account add <name>    create a new profile (then /login inside claude)
-  claude-account init [name [email]]
+  claude-account init [-f] [name [email]]
                                migrate an existing ~/.claude into a profile (name
                                defaults to the hostname; email is read from .claude.json).
                                Does nothing if ~/.claude is already the entry symlink. Run
-                               from a clean terminal with no claude sessions open
+                               from a clean terminal with no claude sessions open;
+                               -f/--force skips the running-session check
   claude-account ensure        repair the active profile's symlinks (home-manager calls this)
   claude-account path          path of the active profile
   claude-account opencode init move OpenCode config into the shared directory. Refuses while
@@ -24,6 +25,7 @@ Usage:
   claude-account opencode status
                                show whether OpenCode config is shared
   claude-account --help        this help
+  claude-account --version     print the version
 
 ~/.claude is a symlink to the active profile, so the stock claude binary needs no wrapper and
 switching is one ln -sfn. CLAUDE_CONFIG_DIR is pinned to $HOME/.claude by home-manager — the
@@ -414,7 +416,7 @@ fix_legacy_paths() {
 # to its own identity); the email argument is optional and only feeds the confirmation line
 cmd_init() {
   local force=0
-  if [[ "${1:-}" == "--force" ]]; then
+  if [[ "${1:-}" == "-f" || "${1:-}" == "--force" ]]; then
     force=1
     shift
   fi
@@ -541,6 +543,19 @@ case "${1:-}" in
     ;;
   help | -h | --help | "")
     usage
+    ;;
+  # VERSION sits beside the script (the repo root in a checkout, share/claude-account
+  # once installed) or one prefix over (the Nix package wraps the script into bin while
+  # VERSION stays in share)
+  -v | --version)
+    self_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+    for v in "$self_dir/VERSION" "$self_dir/../share/claude-account/VERSION"; do
+      if [[ -f "$v" ]]; then
+        echo "claude-account $(cat "$v")"
+        exit 0
+      fi
+    done
+    echo "claude-account unknown"
     ;;
   *)
     die "unknown command: $1 (see --help)"

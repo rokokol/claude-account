@@ -21,6 +21,7 @@ _claude-account() {
     'path:path of the active profile'
     'opencode:share OpenCode config between profiles'
     'help:usage'
+    '--version:print the version'
   )
 
   if ((CURRENT == 2)); then
@@ -29,6 +30,11 @@ _claude-account() {
   fi
 
   case "$words[2]" in
+    init)
+      if ((CURRENT == 3)); then
+        compadd -- -f --force
+      fi
+      ;;
     use)
       _claude_account_profiles
       ;;

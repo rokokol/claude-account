@@ -24,6 +24,10 @@
 
 let
   # Isolated, so editing the README doesn't rebuild the package
+  versionFile = builtins.path {
+    name = "claude-account-VERSION";
+    path = ../VERSION;
+  };
   script = builtins.path {
     name = "claude-account.sh";
     path = ../claude-account.sh;
@@ -51,7 +55,8 @@ in
 
 stdenvNoCC.mkDerivation {
   pname = "claude-account";
-  version = "1.2.0";
+  # VERSION is the one place the number lives; CI holds CHANGELOG.md to it
+  version = lib.fileContents ../VERSION;
 
   dontUnpack = true;
   nativeBuildInputs = [
@@ -65,6 +70,8 @@ stdenvNoCC.mkDerivation {
 
     install -Dm755 ${script} $out/bin/claude-account
     patchShebangs $out/bin
+    # --version finds this one prefix over from the wrapped script in bin
+    install -Dm644 ${versionFile} $out/share/claude-account/VERSION
 
     installShellCompletion --bash --name claude-account ${bashCompletion}
     installShellCompletion --zsh --name _claude-account ${zshCompletion}
