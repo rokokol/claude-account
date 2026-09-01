@@ -444,7 +444,7 @@ cmd_init() {
   # no signal here, it is pinned for every shell; CLAUDECODE is set only inside claude itself
   [[ -z "${CLAUDECODE:-}" ]] ||
     die "init ran from inside claude — exit and run it from a clean terminal"
-  if ((!force)) && claude_running; then
+  if ((force == 0)) && claude_running; then
     die "claude is running — close every session and run init from a clean terminal (or init --force if sure)"
   fi
 
