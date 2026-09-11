@@ -115,14 +115,21 @@ prefix=/usr/local
 bin_path="$prefix/bin/claude-account"
 share_dir="$prefix/share/claude-account"
 
-say "a relative PREFIX is rejected"
-! PREFIX=usr ./install.sh "${INSTALL_FLAGS[@]}" >/dev/null 2>&1 ||
-  die "install.sh accepted a relative PREFIX"
+say "a relative PREFIX is rejected with exit 2, the usage-error code"
+rc=0
+PREFIX=usr ./install.sh "${INSTALL_FLAGS[@]}" >/dev/null 2>&1 || rc=$?
+((rc == 2)) || die "a relative PREFIX exited $rc, not the usage-error code 2"
+
+say "an unknown flag is rejected with exit 2, the usage-error code"
+rc=0
+./install.sh --no-such-flag "${INSTALL_FLAGS[@]}" >/dev/null 2>&1 || rc=$?
+((rc == 2)) || die "an unknown flag exited $rc, not the usage-error code 2"
 
 say "install, running the printed guidance when the preflight refuses"
 rc=0
 out=$(./install.sh "${INSTALL_FLAGS[@]}" 2>&1) || rc=$?
 if ((rc != 0)); then
+  ((rc == 1)) || die "the preflight exited $rc, not the missing-dependency code 1"
   # The refusal must be complete and clean: name what is missing, write nothing
   printf '%s\n' "$out" | grep -q 'missing dependencies' ||
     die "the refusal did not say what is missing: $out"

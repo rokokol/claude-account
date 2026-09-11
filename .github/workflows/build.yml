@@ -52,7 +52,14 @@ jobs:
           stage/usr/bin/claude-account --help >/dev/null
           DESTDIR=$PWD/stage PREFIX=/usr ./install.sh --uninstall
           test ! -e stage/usr/share/claude-account
-          ! DESTDIR=$PWD/bad PREFIX=usr ./install.sh >/dev/null 2>&1
+          # A relative PREFIX and an unknown flag are usage errors, exit 2 — not the
+          # missing-dependency code 1 and not the family's "thing asked about is wrong" 1
+          rc=0
+          DESTDIR=$PWD/bad PREFIX=usr ./install.sh >/dev/null 2>&1 || rc=$?
+          test "$rc" = 2
+          rc=0
+          ./install.sh --no-such-flag >/dev/null 2>&1 || rc=$?
+          test "$rc" = 2
       - run: nix fmt -- --ci
 
   # The one file list lives in the flake's scripts-lint check — this job is a fast,
