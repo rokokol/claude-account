@@ -234,13 +234,19 @@
                 zsh -n ${completionsDir}/_claude-account
                 zsh -n ${completionsDir}/install.sh.zsh
 
-                # install.sh, its help and its completions must not drift apart
+                # install.sh and claude-account.sh, their help and their completions
+                # must not drift apart
                 mkdir -p repo
                 cp ${installer} repo/install.sh
+                cp ${switcher} repo/claude-account.sh
                 cp ${versionFile} repo/VERSION
                 cp -r ${completionsDir} repo/completions
                 cp ${checkSh} repo/check-sh.sh
+                cp ${./README.md} repo/README.md
                 (cd repo && bash ./check-sh.sh -c completions/install.sh.bash completions/install.sh.zsh install.sh)
+                (cd repo && bash ./check-sh.sh -n claude-account -e CLAUDE_ACCOUNT_ \
+                  -c completions/claude-account.bash completions/_claude-account \
+                  -d README.md claude-account.sh)
                 touch $out
               '';
         }

@@ -9,10 +9,11 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 - `install.sh` now exits 2, not 1, on a usage error — an unknown flag, a missing value for `--prefix`/`--destdir`, or a relative `--prefix` — and `--help` ends with the `Exit` sentence naming every code it can produce; a missing dependency in the preflight still exits 1
 - the installer's completions are now drift-checked against `install.sh` by the vendored [bash-best-practices](https://github.com/rokokol/bash-best-practices-skill) `check-sh.sh -c`, replacing `tests/check-completions.sh`
 - `claude-account` now exits 2, not 0 or 1, on a usage error — a bare call with no command, an unknown command, `opencode` with neither `init` nor `status`, `use`/`add` with no name or a badly formed one, or `init` given an unknown flag; a bare call used to print the help to stdout and exit 0, and every other case used to exit 1 through the same `die` a runtime failure uses — `--help` ends with the `Exit` sentence naming every code it can produce
+- `claude-account`'s completions are likewise now drift-checked against `claude-account.sh` by the vendored `check-sh.sh -c`, replacing `tests/run.sh`'s own hand-rolled command-list check; `-v` joins `--version` in both completion files
 
 ### Fixed
 
-- `completions/install.sh.bash` no longer needs bash 4.0's `mapfile`: sourcing it under the bash 3.2 a stock macOS ships failed with "mapfile: command not found" before ever reaching `compgen`; it now collects `COMPREPLY` with a `while IFS= read -r` loop instead
+- `completions/install.sh.bash` and `completions/claude-account.bash` no longer need bash 4.0's `mapfile`: sourcing or installing them under the bash 3.2 a stock macOS ships failed with "mapfile: command not found" before ever reaching `compgen`; both now collect `COMPREPLY` with a `while IFS= read -r` loop instead
 
 ## [1.3.0] - 2026-08-31
 

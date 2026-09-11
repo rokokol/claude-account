@@ -1,7 +1,7 @@
 #compdef claude-account
-# zsh completion for claude-account. The command list is spelled here by hand;
-# tests/run.sh checks it against the --help text, so a command added there fails the
-# suite until it lands here
+# zsh completion for claude-account. The command list is spelled here by hand and
+# checked against claude-account by check-sh.sh -c in scripts-lint: a command added
+# there fails the gate until it lands here and in the bash file too
 
 _claude_account_profiles() {
   # Live names from the tool itself; the active one leads with a star
@@ -21,6 +21,7 @@ _claude-account() {
     'path:path of the active profile'
     'opencode:share OpenCode config between profiles'
     'help:usage'
+    '-v:print the version'
     '--version:print the version'
   )
 
