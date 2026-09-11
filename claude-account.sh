@@ -24,8 +24,8 @@ Usage:
                                at startup, so swapping the directory under it loses writes
   claude-account opencode status
                                show whether OpenCode config is shared
-  claude-account --help        this help
-  claude-account --version     print the version
+  claude-account -h, --help    this help
+  claude-account -v, --version print the version
 
 ~/.claude is a symlink to the active profile, so the stock claude binary needs no wrapper and
 switching is one ln -sfn. CLAUDE_CONFIG_DIR is pinned to $HOME/.claude by home-manager — the
@@ -60,6 +60,10 @@ Environment:
                                ignores the opt-out, being an explicit request. ensure only
                                adopts a config that already exists on one side or the other,
                                so a host without OpenCode never grows one
+
+Exit: 0 clean, 1 when the thing asked about is wrong — no active profile, an unknown
+profile, a live claude or opencode session blocking a write — and 2 on a usage error:
+no command, an unknown one, or a subcommand given bad or missing arguments.
 EOF
 }
 
@@ -89,6 +93,13 @@ fi
 die() {
   printf 'claude-account: %s\n' "$1" >&2
   exit 1
+}
+
+# The request itself is malformed — missing or badly shaped arguments, an unknown
+# subcommand — which is 2, not the 1 die answers for a runtime fact turning out wrong
+usage_error() {
+  printf 'claude-account: %s\n' "$1" >&2
+  exit 2
 }
 
 # The profile name goes into a path, so filter it hard
@@ -275,8 +286,8 @@ cmd_list() {
 cmd_use() {
   local name="${1:-}"
 
-  [[ -n "$name" ]] || die "give a profile name: claude-account use <name>"
-  valid_name "$name" || die "profile name must match [a-zA-Z0-9_-]: $name"
+  [[ -n "$name" ]] || usage_error "give a profile name: claude-account use <name>"
+  valid_name "$name" || usage_error "profile name must match [a-zA-Z0-9_-]: $name"
   [[ -d "$PROFILES_DIR/$name" ]] || die "no profile $name, create it: claude-account add $name"
   assert_migrated
 
@@ -293,8 +304,8 @@ cmd_use() {
 cmd_add() {
   local name="${1:-}"
 
-  [[ -n "$name" ]] || die "give a profile name: claude-account add <name>"
-  valid_name "$name" || die "profile name must match [a-zA-Z0-9_-]: $name"
+  [[ -n "$name" ]] || usage_error "give a profile name: claude-account add <name>"
+  valid_name "$name" || usage_error "profile name must match [a-zA-Z0-9_-]: $name"
   [[ ! -d "$PROFILES_DIR/$name" ]] || die "profile $name already exists"
 
   ensure_profile "$name"
@@ -355,7 +366,7 @@ cmd_opencode() {
       cmd_opencode_status "$@"
       ;;
     *)
-      die "usage: claude-account opencode init|status"
+      usage_error "usage: claude-account opencode init|status"
       ;;
   esac
 }
@@ -374,6 +385,22 @@ cmd_path() {
 
   [[ -n "$name" ]] || die "no active profile, pick one: claude-account use <name>"
   printf '%s\n' "$PROFILES_DIR/$name"
+}
+
+# VERSION sits beside the script (the repo root in a checkout, share/claude-account once
+# installed) or one prefix over (the Nix package wraps the script into bin while VERSION
+# stays in share)
+cmd_version() {
+  local self_dir v
+  self_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+
+  for v in "$self_dir/VERSION" "$self_dir/../share/claude-account/VERSION"; do
+    if [[ -f "$v" ]]; then
+      echo "claude-account $(cat "$v")"
+      return 0
+    fi
+  done
+  echo "claude-account unknown"
 }
 
 # Leftover old-location paths in migrated shared files: plugins and statusline remember
@@ -416,10 +443,20 @@ fix_legacy_paths() {
 # to its own identity); the email argument is optional and only feeds the confirmation line
 cmd_init() {
   local force=0
-  if [[ "${1:-}" == "-f" || "${1:-}" == "--force" ]]; then
-    force=1
-    shift
-  fi
+
+  while (($#)); do
+    case "$1" in
+      -f | --force)
+        force=1
+        shift
+        ;;
+      -*)
+        usage >&2
+        exit 2
+        ;;
+      *) break ;;
+    esac
+  done
 
   local name="${1:-$(uname -n)}"
   local email_arg="${2:-}"
@@ -448,7 +485,7 @@ cmd_init() {
     die "claude is running — close every session and run init from a clean terminal (or init --force if sure)"
   fi
 
-  valid_name "$name" || die "profile name must match [a-zA-Z0-9_-]: $name"
+  valid_name "$name" || usage_error "profile name must match [a-zA-Z0-9_-]: $name"
   local dir="$PROFILES_DIR/$name"
   [[ ! -e "$dir" ]] || die "profile $name already exists — pick another name"
 
@@ -508,56 +545,25 @@ cmd_init() {
     "$name" "$legacy_dir" "${email:-${email_arg:-not logged in}}"
 }
 
-case "${1:-}" in
-  list)
-    shift
-    cmd_list "$@"
-    ;;
-  current)
-    shift
-    cmd_current "$@"
-    ;;
-  use)
-    shift
-    cmd_use "$@"
-    ;;
-  add)
-    shift
-    cmd_add "$@"
-    ;;
-  init)
-    shift
-    cmd_init "$@"
-    ;;
-  ensure)
-    shift
-    cmd_ensure "$@"
-    ;;
-  path)
-    shift
-    cmd_path "$@"
-    ;;
-  opencode)
-    shift
-    cmd_opencode "$@"
-    ;;
-  help | -h | --help | "")
-    usage
-    ;;
-  # VERSION sits beside the script (the repo root in a checkout, share/claude-account
-  # once installed) or one prefix over (the Nix package wraps the script into bin while
-  # VERSION stays in share)
-  -v | --version)
-    self_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-    for v in "$self_dir/VERSION" "$self_dir/../share/claude-account/VERSION"; do
-      if [[ -f "$v" ]]; then
-        echo "claude-account $(cat "$v")"
-        exit 0
-      fi
-    done
-    echo "claude-account unknown"
+cmd="${1:-}"
+(($# == 0)) || shift
+case "$cmd" in
+  list) cmd_list "$@" ;;
+  current) cmd_current "$@" ;;
+  use) cmd_use "$@" ;;
+  add) cmd_add "$@" ;;
+  init) cmd_init "$@" ;;
+  ensure) cmd_ensure "$@" ;;
+  path) cmd_path "$@" ;;
+  opencode) cmd_opencode "$@" ;;
+  -h | --help | help) usage ;;
+  -v | --version) cmd_version ;;
+  '')
+    usage >&2
+    exit 2
     ;;
   *)
-    die "unknown command: $1 (see --help)"
+    usage >&2
+    exit 2
     ;;
 esac

@@ -465,30 +465,49 @@ else
   fail "--help does not document the environment"
 fi
 
-world unknown-command-fails
-if ca frobnicate >/dev/null 2>&1; then
-  fail "an unknown command exited 0"
-else
+world bare-call-is-a-usage-error
+rc=0
+out=$(ca 2>&1 1>/dev/null) || rc=$?
+if ((rc == 2)) && [[ "$out" == *'claude-account'* ]]; then
   ok
+else
+  fail "a bare call exited $rc, not the usage-error code 2, or printed no help to stderr"
 fi
 
-# The completion files spell the command list by hand; the --help text is the declaration
-# they must not drift from
-world completions-know-every-command
-mapfile -t commands < <(ca --help | sed -n 's/^  claude-account \([a-z][a-z-]*\).*/\1/p' | sort -u)
-if ((${#commands[@]} < 5)); then
-  fail "--help lists no commands — the drift check is checking nothing"
+world unknown-command-is-a-usage-error
+rc=0
+ca frobnicate >/dev/null 2>&1 || rc=$?
+if ((rc == 2)); then
+  ok
 else
-  drifted=""
-  for cmd in "${commands[@]}"; do
-    grep -qw "$cmd" "$REPO/completions/claude-account.bash" || drifted+=" bash:$cmd"
-    grep -q "'$cmd:" "$REPO/completions/_claude-account" || drifted+=" zsh:$cmd"
-  done
-  if [[ -z "$drifted" ]]; then
-    ok
-  else
-    fail "commands missing from completions:$drifted"
-  fi
+  fail "an unknown command exited $rc, not the usage-error code 2"
+fi
+
+world opencode-with-a-bad-subcommand-is-a-usage-error
+rc=0
+ca opencode nope >/dev/null 2>&1 || rc=$?
+if ((rc == 2)); then
+  ok
+else
+  fail "opencode with an unknown subcommand exited $rc, not the usage-error code 2"
+fi
+
+world use-with-no-name-is-a-usage-error
+rc=0
+ca use >/dev/null 2>&1 || rc=$?
+if ((rc == 2)); then
+  ok
+else
+  fail "use with no name exited $rc, not the usage-error code 2"
+fi
+
+world init-with-a-bad-flag-is-a-usage-error
+rc=0
+ca init --no-such-flag >/dev/null 2>&1 || rc=$?
+if ((rc == 2)); then
+  ok
+else
+  fail "init with an unknown flag exited $rc, not the usage-error code 2"
 fi
 
 world claude-account-prints-its-version

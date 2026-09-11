@@ -8,6 +8,7 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 
 - `install.sh` now exits 2, not 1, on a usage error — an unknown flag, a missing value for `--prefix`/`--destdir`, or a relative `--prefix` — and `--help` ends with the `Exit` sentence naming every code it can produce; a missing dependency in the preflight still exits 1
 - the installer's completions are now drift-checked against `install.sh` by the vendored [bash-best-practices](https://github.com/rokokol/bash-best-practices-skill) `check-sh.sh -c`, replacing `tests/check-completions.sh`
+- `claude-account` now exits 2, not 0 or 1, on a usage error — a bare call with no command, an unknown command, `opencode` with neither `init` nor `status`, `use`/`add` with no name or a badly formed one, or `init` given an unknown flag; a bare call used to print the help to stdout and exit 0, and every other case used to exit 1 through the same `die` a runtime failure uses — `--help` ends with the `Exit` sentence naming every code it can produce
 
 ### Fixed
 
