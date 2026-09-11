@@ -32,6 +32,10 @@
         name = "install.sh";
         path = ./install.sh;
       };
+      checkSh = builtins.path {
+        name = "check-sh.sh";
+        path = ./check-sh.sh;
+      };
       versionFile = builtins.path {
         name = "claude-account-VERSION";
         path = ./VERSION;
@@ -221,7 +225,7 @@
                 ];
               }
               ''
-                files="${switcher} ${installer} ${testsDir}/run.sh ${testsDir}/distro.sh ${testsDir}/check-completions.sh ${testsDir}/stub/pgrep ${completionsDir}/claude-account.bash ${completionsDir}/install.sh.bash"
+                files="${switcher} ${installer} ${testsDir}/run.sh ${testsDir}/distro.sh ${checkSh} ${testsDir}/stub/pgrep ${completionsDir}/claude-account.bash ${completionsDir}/install.sh.bash"
                 # shellcheck disable=SC2086
                 shellcheck $files
                 # shellcheck disable=SC2086
@@ -230,12 +234,13 @@
                 zsh -n ${completionsDir}/_claude-account
                 zsh -n ${completionsDir}/install.sh.zsh
 
-                # install.sh and its completions must not drift apart
-                mkdir -p repo/tests
+                # install.sh, its help and its completions must not drift apart
+                mkdir -p repo
                 cp ${installer} repo/install.sh
+                cp ${versionFile} repo/VERSION
                 cp -r ${completionsDir} repo/completions
-                cp ${testsDir}/check-completions.sh repo/tests/
-                bash repo/tests/check-completions.sh
+                cp ${checkSh} repo/check-sh.sh
+                (cd repo && bash ./check-sh.sh -c completions/install.sh.bash completions/install.sh.zsh install.sh)
                 touch $out
               '';
         }

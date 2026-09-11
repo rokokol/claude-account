@@ -23,8 +23,10 @@ nix fmt -- --ci
 claude-account.sh    the switcher
 VERSION              the one place the version lives — package.nix, --version and CI read it
 completions/         the tool's completions plus install.sh's own, spelled by hand
+check-sh.sh          vendored from bash-best-practices, holds install.sh's and
+                     claude-account's help and completions to their parsers
 nix/                 package.nix, module.nix, module-test.nix
-tests/               run.sh, distro.sh, check-completions.sh and the pgrep stub
+tests/               run.sh, distro.sh and the pgrep stub
 install.sh           for systems without Nix
 ```
 
