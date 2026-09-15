@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Drives claude-account against a scratch HOME and checks what it did to the filesystem.
+# Drives claude-account against a scratch HOME and checks what it did to the filesystem
 #
 # Every case gets a fresh HOME *and* a fresh XDG_DATA_HOME: setting HOME alone is not enough,
 # because a session that exports XDG_DATA_HOME — home-manager does — would send the test at
@@ -7,6 +7,22 @@
 # how it derives them cannot reach live data
 
 set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+tests/run.sh — the fast suite for claude-account: drives it against a scratch HOME and a
+scratch XDG_DATA_HOME and checks what it did to the filesystem
+
+  tests/run.sh
+
+Nothing here reaches the network
+Exit: 0 all passed, 1 a case failed
+EOF
+}
+[[ "${1:-}" == "-h" || "${1:-}" == "--help" || "${1:-}" == "help" ]] && {
+  usage
+  exit 0
+}
 
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 REPO=$(dirname "$HERE")
