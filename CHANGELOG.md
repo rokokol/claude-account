@@ -13,6 +13,8 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 
 ### Fixed
 
+- the control check after a profile rename listed the files still pointing at the old path through `grep -rl … | grep -q .`, where the second grep stops at its first line and the first dies of SIGPIPE, which `pipefail` turns into the status of a check that found exactly what it looked for — a rare failure, since it depends on which write loses the race. The list is read once into a variable instead; the vendored `check-sh.sh` now reports the shape wherever it appears
+
 - `completions/install.sh.bash` and `completions/claude-account.bash` no longer need bash 4.0's `mapfile`: sourcing or installing them under the bash 3.2 a stock macOS ships failed with "mapfile: command not found" before ever reaching `compgen`; both now collect `COMPREPLY` with a `while IFS= read -r` loop instead
 
 ## [1.3.0] - 2026-08-31

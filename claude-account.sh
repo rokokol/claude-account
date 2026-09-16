@@ -431,10 +431,14 @@ fix_legacy_paths() {
     fi
   fi
 
-  # Control check: maybe something still references the old path
-  if grep -rl "$old" "$SHARED_DIR" "$PROFILES_DIR/$name" 2>/dev/null | grep -q .; then
+  # Control check: maybe something still references the old path. The list is taken once
+  # into a variable rather than piped into `grep -q .`: a reader that stops at its first
+  # line kills the grep feeding it with SIGPIPE, and pipefail makes that the status of a
+  # check that found exactly what it looked for
+  refs=$(grep -rl "$old" "$SHARED_DIR" "$PROFILES_DIR/$name" 2>/dev/null || :)
+  if [[ -n "$refs" ]]; then
     printf 'claude-account: references to %s remain, check by hand:\n' "$old" >&2
-    grep -rl "$old" "$SHARED_DIR" "$PROFILES_DIR/$name" 2>/dev/null >&2
+    printf '%s\n' "$refs" >&2
   fi
 }
 
