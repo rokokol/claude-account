@@ -235,7 +235,9 @@
                 zsh -n ${completionsDir}/install.sh.zsh
 
                 # install.sh and claude-account.sh, their help and their completions
-                # must not drift apart
+                # must not drift apart. check-sh.sh proves itself on the first call; the
+                # second runs the same copy under the same bash, so CHECK_SH_NESTED=1 spares
+                # it a self-test that would prove nothing new
                 mkdir -p repo
                 cp ${installer} repo/install.sh
                 cp ${switcher} repo/claude-account.sh
@@ -244,7 +246,7 @@
                 cp ${checkSh} repo/check-sh.sh
                 cp ${./README.md} repo/README.md
                 (cd repo && bash ./check-sh.sh -c completions/install.sh.bash completions/install.sh.zsh install.sh)
-                (cd repo && bash ./check-sh.sh -n claude-account -e CLAUDE_ACCOUNT_ \
+                (cd repo && CHECK_SH_NESTED=1 bash ./check-sh.sh -n claude-account -e CLAUDE_ACCOUNT_ \
                   -c completions/claude-account.bash completions/_claude-account \
                   -d README.md claude-account.sh)
                 touch $out
