@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Drives claude-account against a scratch HOME and checks what it did to the filesystem
-#
 # Every case gets a fresh HOME *and* a fresh XDG_DATA_HOME: setting HOME alone is not enough,
 # because a session that exports XDG_DATA_HOME — home-manager does — would send the test at
 # the real profiles. The script is also pointed at scratch dirs explicitly, so even a bug in
