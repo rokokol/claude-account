@@ -339,12 +339,12 @@ cmd_ensure() {
   fi
 }
 
-cmd_opencode_init() {
+opencode_init() {
   ensure_opencode_config "${OPENCODE_CONFIG_DIR:-$CONFIG_HOME/opencode}"
   printf 'OpenCode config is shared at %s/opencode\n' "$SHARED_DIR"
 }
 
-cmd_opencode_status() {
+opencode_status() {
   local config_dir="${OPENCODE_CONFIG_DIR:-$CONFIG_HOME/opencode}"
   local shared_config="$SHARED_DIR/opencode"
 
@@ -359,11 +359,11 @@ cmd_opencode() {
   case "${1:-}" in
     init)
       shift
-      cmd_opencode_init "$@"
+      opencode_init "$@"
       ;;
     status)
       shift
-      cmd_opencode_status "$@"
+      opencode_status "$@"
       ;;
     *)
       usage_error "usage: claude-account opencode init|status"
