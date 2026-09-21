@@ -206,6 +206,41 @@ ensure_profile() {
   done
 }
 
+ensure_opencode_plans() {
+  local opencode_data="$DATA_HOME/opencode"
+  local opencode_plans="$opencode_data/plans"
+  local shared_plans="$SHARED_DIR/plans"
+  local plans_parent target actual
+
+  [[ -d "$shared_plans" ]] || mkdir -p "$shared_plans"
+
+  if [[ -L "$opencode_plans" ]]; then
+    actual=$(realpath -m "$opencode_plans")
+    target=$(realpath -m "$shared_plans")
+    [[ "$actual" == "$target" ]] ||
+      die "$opencode_plans points to $actual, not the shared plans directory"
+    return
+  fi
+
+  if opencode_running; then
+    return
+  fi
+
+  if [[ -e "$opencode_plans" ]]; then
+    [[ -d "$opencode_plans" ]] || die "$opencode_plans is not a directory"
+    require_opencode_closed
+    cp -rn "$opencode_plans"/* "$shared_plans"/ 2>/dev/null || true
+    rm -rf "$opencode_plans"
+  else
+    require_opencode_closed
+    mkdir -p "$opencode_data"
+  fi
+
+  plans_parent=$(dirname "$opencode_plans")
+  target=$(realpath -sm --relative-to="$plans_parent" "$shared_plans")
+  ln -s "$target" "$opencode_plans"
+}
+
 # A second argument of "adopt" means take over a config that already exists on either side
 # but do not conjure one: a host without OpenCode has no business growing a config directory
 # for it, and the empty directory would ride the sync to every other host
@@ -226,9 +261,13 @@ ensure_opencode_config() {
       die "$config_dir points to $actual, not the shared OpenCode config"
     # Already shared: the activation hook lands here every time, so it must stay a no-op
     # rather than a complaint about whatever session the user has open
-    [[ -d "$shared_config" ]] && return
+    if [[ -d "$shared_config" ]]; then
+      ensure_opencode_plans
+      return
+    fi
     require_opencode_closed
     mkdir -p "$shared_config"
+    ensure_opencode_plans
     return
   fi
 
@@ -248,6 +287,8 @@ ensure_opencode_config() {
   mkdir -p "$config_parent"
   target=$(realpath -sm --relative-to="$config_parent" "$shared_config")
   ln -s "$target" "$config_dir"
+
+  ensure_opencode_plans
 }
 
 profile_email() {

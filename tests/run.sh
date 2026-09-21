@@ -291,6 +291,17 @@ else
   fail "ensure migrated the OpenCode directory the empty setting opted out of"
 fi
 
+world ensure-shares-opencode-plans
+mkdir -p "$XDG_CONFIG_HOME/opencode" "$CLAUDE_ACCOUNT_SHARED_DIR/plans"
+printf 'plan\n' >"$CLAUDE_ACCOUNT_SHARED_DIR/plans/p1.md"
+ca ensure >/dev/null 2>&1
+if [[ -L "$XDG_DATA_HOME/opencode/plans" &&
+  "$(cat "$XDG_DATA_HOME/opencode/plans/p1.md")" == 'plan' ]]; then
+  ok
+else
+  fail "ensure did not symlink opencode plans to shared plans"
+fi
+
 echo "init"
 
 # The shape a pre-profile machine has: a real ~/.claude with a token, shared work and a
