@@ -172,8 +172,8 @@ ensure_shared() {
 }
 
 # Idempotent: profile dir + symlinks to the shared parts. Overwrites nothing — if a real
-# file sits where a symlink should be, it only warns (otherwise one day we'd silently eat
-# someone's settings)
+# file sits where a symlink should be, it only warns (otherwise a run would one day eat
+# someone's settings in silence)
 ensure_profile() {
   local name="$1"
   local dir="$PROFILES_DIR/$name"
@@ -195,7 +195,7 @@ ensure_profile() {
     target=$(realpath -sm --relative-to="$dir" "$SHARED_DIR/$entry")
 
     if [[ -L "$link" ]]; then
-      # Already our symlink — retarget just in case (broken/moved)
+      # Already a symlink — retarget it anyway, in case it is broken or moved
       ln -sfn "$target" "$link"
     elif [[ -e "$link" ]]; then
       printf 'claude-account: %s — regular file, leaving it (expected a symlink to shared)\n' \
@@ -472,7 +472,7 @@ fix_legacy_paths() {
     fi
   fi
 
-  # Control check: maybe something still references the old path. The list is taken once
+  # Control check for anything that still references the old path. The list is taken once
   # into a variable rather than piped into `grep -q .`: a reader that stops at its first
   # line kills the grep feeding it with SIGPIPE, and pipefail makes that the status of a
   # check that found exactly what it looked for
@@ -561,8 +561,8 @@ cmd_init() {
   fi
 
   # Pull the shared entries out into claude-shared. On a fresh machine it is empty, so
-  # everything moves as-is; if something is already there, the profile copy goes to .bak so
-  # we don't clobber shared. Order matters: this loop runs before ensure_shared/ensure_profile,
+  # everything moves as-is; if something is already there, the profile copy goes to .bak and
+  # the shared one stays. Order matters: this loop runs before ensure_shared/ensure_profile,
   # otherwise those would create empty stubs and the real data would go to .bak instead
   local entry src
   for entry in "${SHARED_ENTRIES[@]}"; do
