@@ -83,6 +83,7 @@ world add-creates-shared-links
 ca add work >/dev/null
 if [[ -L "$CLAUDE_ACCOUNT_PROFILES_DIR/work/settings.json" &&
   -L "$CLAUDE_ACCOUNT_PROFILES_DIR/work/projects" &&
+  -L "$CLAUDE_ACCOUNT_PROFILES_DIR/work/themes" &&
   -f "$CLAUDE_ACCOUNT_SHARED_DIR/settings.json" ]]; then
   ok
 else

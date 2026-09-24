@@ -36,7 +36,7 @@ regular file. Pinning keeps .claude.json inside the profile, where the rename is
 A profile isolates only the account: .credentials.json (OAuth token) and .claude.json (it holds
 oauthAccount and userID — the token-to-account binding). Everything else is shared and symlinked
 from ~/.local/share/claude-shared: settings.json, CLAUDE.md, plugins/, skills/, commands/,
-agents/, plus all the shared work — chats and memory (projects/), command history
+agents/, themes/, plus all the shared work — chats and memory (projects/), command history
 (history.jsonl), plans (plans/), tasks (tasks/, todos/) and file-edit history (file-history/).
 Claude Code writes through symlinks, so /config, /memory and /resume keep working
 
@@ -81,7 +81,7 @@ OPENCODE_CONFIG_DIR="${CLAUDE_ACCOUNT_OPENCODE_CONFIG_DIR-$CONFIG_HOME/opencode}
 # under whichever account is active — chats and memory, command history, plans, tasks and
 # file-edit history.
 SHARED_ENTRIES=(
-  settings.json CLAUDE.md plugins skills commands agents
+  settings.json CLAUDE.md plugins skills commands agents themes
   projects history.jsonl plans todos tasks file-history
 )
 

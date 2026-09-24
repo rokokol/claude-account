@@ -8,6 +8,10 @@ Kept in the shape of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), v
 
 - `ensure` now also links OpenCode's plans directory (`$XDG_DATA_HOME/opencode/plans`) to the shared plans directory (`$SHARED_DIR/plans`), sharing plans between profiles and machines
 
+### Changed
+
+- `themes/` is now shared by default, beside `settings.json`, `skills/` and `agents/`: a custom theme made with `/theme` reaches every profile and every synced machine. Before, it stayed in the profile that made it, while the theme choice in the shared `settings.json` reached the others and named a theme they did not have. A profile that already has its own `themes/` directory keeps it, and `ensure` warns about it; move its files into `claude-shared/themes/` to share them
+
 ## [1.3.1] - 2026-09-21
 
 ### Changed

@@ -74,7 +74,7 @@ Any of that which would actually change the directory refuses while an OpenCode 
 | stays in the profile | is shared |
 | --- | --- |
 | `.credentials.json` — the OAuth token | `settings.json`, `CLAUDE.md` |
-| `.claude.json` — `oauthAccount`, the token-to-account binding | `skills/`, `plugins/`, `commands/`, `agents/` |
+| `.claude.json` — `oauthAccount`, the token-to-account binding | `skills/`, `plugins/`, `commands/`, `agents/`, `themes/` — custom `/theme` themes |
 | | `projects/` — chats and memory, `history.jsonl` |
 | | `plans/`, `tasks/`, `todos/`, `file-history/` |
 
