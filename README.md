@@ -7,6 +7,7 @@
 ![Claude Code](https://img.shields.io/badge/Claude_Code-D97757?style=flat&logo=anthropic&logoColor=white)
 ![Bash](https://img.shields.io/badge/Bash-4EAA25?style=flat&logo=gnubash&logoColor=white)
 ![Nix](https://img.shields.io/badge/Nix-flake-7EBAE4?style=flat&logo=nixos&logoColor=white)
+[![FlakeHub](https://img.shields.io/endpoint?url=https://flakehub.com/f/rokokol/claude-account/badge)](https://flakehub.com/flake/rokokol/claude-account)
 [![license](https://img.shields.io/badge/MIT-3DA639?style=flat)](LICENSE)
 [![build](https://github.com/rokokol/claude-account/actions/workflows/build.yml/badge.svg)](https://github.com/rokokol/claude-account/actions/workflows/build.yml)
 [![debian](https://github.com/rokokol/claude-account/actions/workflows/distro-debian.yml/badge.svg)](https://github.com/rokokol/claude-account/actions/workflows/distro-debian.yml)
