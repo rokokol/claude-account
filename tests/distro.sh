@@ -34,7 +34,7 @@ INSTALL_FLAGS=()
 declare -A BOOTSTRAP=(
   [debian]=':'
   [ubuntu]=':'
-  [arch]='pacman -Sy --noconfirm'
+  [arch]='pacman -Syu --noconfirm'
   [fedora]=':'
 )
 
